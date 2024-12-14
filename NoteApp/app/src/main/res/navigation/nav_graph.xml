@@ -39,9 +39,6 @@
             android:name = "note"
             app:argType="com.example.noteapp.model.Note"
             app:nullable="true"/>
-        <argument
-            android:name="note"
-            app:argType="com.example.noteapp.model.Note"
-            app:nullable="true" />
+
     </fragment>
 </navigation>

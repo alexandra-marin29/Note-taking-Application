@@ -9,6 +9,18 @@
         android:layout_height="match_parent"
         tools:context=".HomeFragment">
 
+        <!-- SearchView Adăugat -->
+        <androidx.appcompat.widget.SearchView
+            android:id="@+id/searchView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:queryHint="Caută note..."
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_margin="16dp" />
+
+        <!-- FloatingActionButton -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/addNoteFab"
             android:layout_width="wrap_content"
@@ -17,28 +29,35 @@
             android:layout_marginBottom="28dp"
             android:backgroundTint="@color/pink"
             android:clickable="true"
-            android:contentDescription="image"
-            android:tintMode="@color/white"
+            android:contentDescription="Adaugă notă"
+            android:tint="@color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:srcCompat="@drawable/baseline_add_24" />
 
+        <!-- RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/homeRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/searchView"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_margin="16dp" />
 
+        <!-- ImageView pentru starea fără note -->
         <ImageView
+            android:id="@+id/emptyNotesImage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/emptyNotesImage"
             android:visibility="gone"
-            android:src="@drawable/emptybkg"/>
+            android:src="@drawable/emptybkg"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
