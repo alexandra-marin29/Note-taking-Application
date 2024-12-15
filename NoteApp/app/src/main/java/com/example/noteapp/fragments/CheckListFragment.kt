@@ -1,8 +1,11 @@
 package com.example.noteapp.fragments
 
+import android.content.Context
 import android.os.Bundle
+import android.text.InputType
 import android.view.*
 import android.view.KeyEvent
+import android.view.inputmethod.InputMethodManager
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -87,7 +90,7 @@ class CheckListFragment : Fragment(), MenuProvider {
     }
 
 
-    private fun addCheckListRow(initialText: String = "", checked: Boolean = false) {
+    private fun addCheckListRow(initialText: String = "", checked: Boolean = false): EditText {
         val rowLayout = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
@@ -112,11 +115,25 @@ class CheckListFragment : Fragment(), MenuProvider {
             )
             textSize = 18f
             hint = "Enter item..."
+            setSingleLine(false)
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
             setText(initialText)
+
             setOnKeyListener { _, keyCode, event ->
-                if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) {
-                    addCheckListRow()
-                    return@setOnKeyListener true
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_ENTER -> {
+
+                            return@setOnKeyListener false
+                        }
+                        KeyEvent.KEYCODE_DPAD_DOWN -> {
+                            val newEdit = addCheckListRow("", false)
+                            newEdit.requestFocus()
+                            val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                            imm.showSoftInput(newEdit, InputMethodManager.SHOW_IMPLICIT)
+                            return@setOnKeyListener true
+                        }
+                    }
                 }
                 false
             }
@@ -125,7 +142,12 @@ class CheckListFragment : Fragment(), MenuProvider {
         rowLayout.addView(checkBox)
         rowLayout.addView(editText)
         checkListContainer.addView(rowLayout)
+
+        return editText
     }
+
+
+
 
     private fun saveCheckList() {
         val title = checklistTitleEditText.text.toString().trim()

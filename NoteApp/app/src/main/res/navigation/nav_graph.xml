@@ -27,6 +27,7 @@
                 app:argType="com.example.noteapp.model.Note"
                 app:nullable="true" />
         </action>
+
     </fragment>
 
     <fragment
@@ -68,4 +69,10 @@
             app:nullable="true"/>
 
     </fragment>
+    <action
+        android:id="@+id/action_global_checkListFragment"
+        app:destination="@id/checkListFragment" />
+    <action
+        android:id="@+id/action_global_addNoteFragment"
+        app:destination="@id/addNoteFragment"/>
 </navigation>

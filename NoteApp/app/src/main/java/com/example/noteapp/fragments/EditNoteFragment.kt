@@ -26,6 +26,9 @@ import com.example.noteapp.model.Note
 import com.example.noteapp.viewmodel.NoteViewModel
 import org.json.JSONArray
 import org.json.JSONObject
+import android.content.Context
+import android.view.inputmethod.InputMethodManager
+
 
 class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
@@ -51,6 +54,8 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val menuHost: MenuHost = requireActivity()
+        menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
         notesViewModel = (activity as MainActivity).noteViewModel
 
         currentNote = args.note!!
@@ -90,7 +95,7 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
         }
     }
 
-    private fun addCheckListRow(initialText: String = "", checked: Boolean = false) {
+    private fun addCheckListRow(initialText: String = "", checked: Boolean = false): EditText {
         val rowLayout = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
@@ -113,18 +118,35 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             )
             textSize = 18f
             setText(initialText)
+            setSingleLine(false)
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+
             setOnKeyListener { _, keyCode, event ->
-                if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) {
-                    addCheckListRow()
-                    return@setOnKeyListener true
-                }
-                false
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_ENTER -> {
+                            false
+                        }
+                        KeyEvent.KEYCODE_DPAD_DOWN -> {
+                            val newEdit = addCheckListRow("", false)
+                            newEdit.requestFocus()
+                            val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                            imm.showSoftInput(newEdit, InputMethodManager.SHOW_IMPLICIT)
+                            true
+                        }
+                        else -> false
+                    }
+                } else false
             }
         }
+
         rowLayout.addView(checkBox)
         rowLayout.addView(editText)
         editChecklistContainer.addView(rowLayout)
+
+        return editText
     }
+
 
     private fun updateNote() {
         val noteTitle = binding.editNoteTitle.text.toString().trim()

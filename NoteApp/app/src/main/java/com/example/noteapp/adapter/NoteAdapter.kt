@@ -1,5 +1,6 @@
 package com.example.noteapp.adapter
 
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.navigation.findNavController
@@ -13,6 +14,8 @@ import android.view.View
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.os.bundleOf
+import com.example.noteapp.R
 import org.json.JSONArray
 
 
@@ -61,7 +64,7 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
             binding.checklistContainerPreview.visibility = View.VISIBLE
             binding.noteDesc.visibility = View.GONE
 
-            for (i in 0 until jsonArray.length()) {
+            for (i in 0 until minOf(jsonArray.length(), 3)) {
                 val obj = jsonArray.getJSONObject(i)
                 val itemText = obj.getString("text")
                 val itemChecked = obj.getBoolean("isChecked")
@@ -96,9 +99,14 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
         }
 
         holder.itemView.setOnClickListener {
-            val direction = HomeFragmentDirections.actionHomeFragmentToEditNoteFragment(currentNote)
-            it.findNavController().navigate(direction)
+            val note = currentNote
+            val bundle = Bundle().apply {
+                putParcelable("note", note)
+            }
+            it.findNavController().navigate(R.id.editNoteFragment, bundle)
         }
+
+
     }
 
 }

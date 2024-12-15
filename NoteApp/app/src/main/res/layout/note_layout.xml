@@ -44,6 +44,8 @@
                 android:maxHeight="170dp"
                 android:text="Description"
                 android:textSize="14sp"
+                android:maxLines="3"
+                android:ellipsize="end"
                 android:fontFamily="@font/poppins"
                 android:textColor="@color/pink"/>
 

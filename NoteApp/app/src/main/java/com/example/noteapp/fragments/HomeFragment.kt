@@ -48,12 +48,13 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
         setupHomeRecyclerView()
 
         binding.addNoteFab.setOnClickListener {
-            it.findNavController().navigate(R.id.action_homeFragment_to_addNoteFragment)
+            it.findNavController().navigate(R.id.action_global_addNoteFragment)
+        }
 
-        }
         binding.checkBoxFab.setOnClickListener {
-            it.findNavController().navigate(R.id.action_homeFragment_to_checklistNoteFragment)
+            it.findNavController().navigate(R.id.action_global_checkListFragment)
         }
+
 
 
 
