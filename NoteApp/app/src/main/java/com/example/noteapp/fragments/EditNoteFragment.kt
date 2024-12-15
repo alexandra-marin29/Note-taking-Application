@@ -1,6 +1,7 @@
 package com.example.noteapp.fragments
 
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.Menu
@@ -8,6 +9,9 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.MenuHost
@@ -20,6 +24,8 @@ import com.example.noteapp.R
 import com.example.noteapp.databinding.FragmentEditNoteBinding
 import com.example.noteapp.model.Note
 import com.example.noteapp.viewmodel.NoteViewModel
+import org.json.JSONArray
+import org.json.JSONObject
 
 class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
@@ -30,6 +36,8 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
     private lateinit var currentNote: Note
 
     private val args: EditNoteFragmentArgs by navArgs()
+    private lateinit var editChecklistContainer: LinearLayout
+    private lateinit var editNoteDescEditText: EditText
 
 
     override fun onCreateView(
@@ -43,29 +51,108 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val menuHost: MenuHost = requireActivity()
-        menuHost.addMenuProvider( this, viewLifecycleOwner, Lifecycle.State.RESUMED )
-
         notesViewModel = (activity as MainActivity).noteViewModel
+
         currentNote = args.note!!
 
         binding.editNoteTitle.setText(currentNote.noteTitle)
-        binding.editNoteDesc.setText(currentNote.noteDesc)
+        editChecklistContainer = binding.editChecklistContainer
+        editNoteDescEditText = binding.editNoteDesc
+
+        if (tryLoadChecklist(currentNote.noteDesc)) {
+            editNoteDescEditText.visibility = View.GONE
+            editChecklistContainer.visibility = View.VISIBLE
+        } else {
+            editChecklistContainer.visibility = View.GONE
+            editNoteDescEditText.visibility = View.VISIBLE
+            editNoteDescEditText.setText(currentNote.noteDesc)
+        }
 
         binding.editNoteFab.setOnClickListener {
-            val noteTitle = binding.editNoteTitle.text.toString().trim()
-            val noteDesc = binding.editNoteDesc.text.toString().trim()
+            updateNote()
+        }
+    }
 
-            if(noteTitle.isNotEmpty()){
-                val note = Note(currentNote.id, noteTitle, noteDesc)
-                notesViewModel.updateNote(note)
-                view.findNavController().popBackStack(R.id.homeFragment,false  )
+    private fun tryLoadChecklist(jsonString: String): Boolean {
+        return try {
+            val jsonArray = JSONArray(jsonString)
+            editChecklistContainer.removeAllViews()
+
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                val itemText = obj.getString("text")
+                val isChecked = obj.getBoolean("isChecked")
+                addCheckListRow(itemText, isChecked)
             }
-            else {
-                Toast.makeText(context, "Please enter note title", Toast.LENGTH_SHORT).show()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
 
+    private fun addCheckListRow(initialText: String = "", checked: Boolean = false) {
+        val rowLayout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        val checkBox = CheckBox(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            isChecked = checked
+        }
+        val editText = EditText(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+            textSize = 18f
+            setText(initialText)
+            setOnKeyListener { _, keyCode, event ->
+                if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) {
+                    addCheckListRow()
+                    return@setOnKeyListener true
+                }
+                false
             }
         }
+        rowLayout.addView(checkBox)
+        rowLayout.addView(editText)
+        editChecklistContainer.addView(rowLayout)
+    }
+
+    private fun updateNote() {
+        val noteTitle = binding.editNoteTitle.text.toString().trim()
+        if(noteTitle.isEmpty()) {
+            Toast.makeText(context, "Please enter note title", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val finalDesc = if (editChecklistContainer.visibility == View.VISIBLE) {
+            val jsonArray = JSONArray()
+            for (i in 0 until editChecklistContainer.childCount) {
+                val row = editChecklistContainer.getChildAt(i) as LinearLayout
+                val checkBox = row.getChildAt(0) as CheckBox
+                val editText = row.getChildAt(1) as EditText
+
+                val obj = JSONObject()
+                obj.put("text", editText.text.toString().trim())
+                obj.put("isChecked", checkBox.isChecked)
+                jsonArray.put(obj)
+            }
+            jsonArray.toString()
+        } else {
+            editNoteDescEditText.text.toString().trim()
+        }
+
+        val updatedNote = Note(currentNote.id, noteTitle, finalDesc)
+        notesViewModel.updateNote(updatedNote)
+        view?.findNavController()?.popBackStack(R.id.homeFragment, false)
     }
 
     private fun deleteNote() {

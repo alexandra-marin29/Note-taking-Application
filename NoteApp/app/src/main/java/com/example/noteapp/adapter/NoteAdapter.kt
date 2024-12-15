@@ -9,6 +9,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.noteapp.databinding.NoteLayoutBinding
 import com.example.noteapp.fragments.HomeFragmentDirections
 import com.example.noteapp.model.Note
+import android.view.View
+import android.widget.CheckBox
+import android.widget.LinearLayout
+import android.widget.TextView
+import org.json.JSONArray
+
 
 class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
@@ -40,13 +46,59 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
     override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
         val currentNote = differ.currentList[position]
+        val binding = holder.itemBinding
 
-        holder.itemBinding.noteTitle.text = currentNote.noteTitle
-        holder.itemBinding.noteDesc.text = currentNote.noteDesc
+        binding.noteTitle.text = currentNote.noteTitle
+
+        binding.checklistContainerPreview.removeAllViews()
+        binding.checklistContainerPreview.visibility = View.GONE
+        binding.noteDesc.visibility = View.VISIBLE
+
+        val noteDesc = currentNote.noteDesc
+
+        try {
+            val jsonArray = JSONArray(noteDesc)
+            binding.checklistContainerPreview.visibility = View.VISIBLE
+            binding.noteDesc.visibility = View.GONE
+
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                val itemText = obj.getString("text")
+                val itemChecked = obj.getBoolean("isChecked")
+
+                val rowLayout = LinearLayout(holder.itemView.context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+                val checkBox = CheckBox(holder.itemView.context).apply {
+                    isClickable = false
+                    isChecked = itemChecked
+                }
+                val textView = TextView(holder.itemView.context).apply {
+                    text = itemText
+                    textSize = 16f
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+
+                rowLayout.addView(checkBox)
+                rowLayout.addView(textView)
+                binding.checklistContainerPreview.addView(rowLayout)
+            }
+
+        } catch (e: Exception) {
+            binding.noteDesc.text = noteDesc
+        }
 
         holder.itemView.setOnClickListener {
             val direction = HomeFragmentDirections.actionHomeFragmentToEditNoteFragment(currentNote)
             it.findNavController().navigate(direction)
         }
     }
+
 }
