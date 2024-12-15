@@ -10,6 +10,19 @@
         tools:context=".HomeFragment">
 
 
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/checkBoxFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="100dp"
+            android:backgroundTint="@color/pink"
+            android:contentDescription="Check"
+            android:tint="@color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:srcCompat="@drawable/baseline_check_box_24" />
+
 
         <!-- FloatingActionButton -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -20,7 +33,7 @@
             android:layout_marginBottom="28dp"
             android:backgroundTint="@color/pink"
             android:clickable="true"
-            android:contentDescription="Adaugă notă"
+            android:contentDescription="Add note"
             android:tint="@color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

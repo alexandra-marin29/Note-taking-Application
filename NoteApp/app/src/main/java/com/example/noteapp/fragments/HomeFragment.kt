@@ -51,6 +51,12 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
             it.findNavController().navigate(R.id.action_homeFragment_to_addNoteFragment)
 
         }
+        binding.checkBoxFab.setOnClickListener {
+            it.findNavController().navigate(R.id.action_homeFragment_to_checklistNoteFragment)
+        }
+
+
+
     }
 
     private fun updateUI(note: List<Note>?){
