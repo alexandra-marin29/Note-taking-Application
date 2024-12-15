@@ -6,4 +6,9 @@
         android:id="@+id/saveMenu"
         android:title="Save"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/settingsMenu"
+        android:icon="@drawable/baseline_settings_24"
+        android:title="Settings"
+        app:showAsAction="always" />
 </menu>

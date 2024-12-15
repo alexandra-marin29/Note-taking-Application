@@ -1,5 +1,6 @@
 package com.example.noteapp.adapter
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -14,6 +15,7 @@ import android.view.View
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.core.os.bundleOf
 import com.example.noteapp.R
 import org.json.JSONArray
@@ -51,16 +53,28 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
         val currentNote = differ.currentList[position]
         val binding = holder.itemBinding
 
+        val noteColorHex = currentNote.noteColor ?: "#FFFFFFFF"
+        val parsedColor = Color.parseColor(noteColorHex)
+
+        // Setează culoarea pe card
+        binding.noteCardView.setCardBackgroundColor(parsedColor)
+
+        // Setează culoarea pe titlu și descriere
+        binding.noteTitle.setBackgroundColor(parsedColor)
+        binding.noteDesc.setBackgroundColor(parsedColor)
+
+        // Setează textul titlului
         binding.noteTitle.text = currentNote.noteTitle
 
+        // Curăță vechile checkboxuri dacă sunt
         binding.checklistContainerPreview.removeAllViews()
         binding.checklistContainerPreview.visibility = View.GONE
         binding.noteDesc.visibility = View.VISIBLE
 
         val noteDesc = currentNote.noteDesc
-
         try {
             val jsonArray = JSONArray(noteDesc)
+            // Avem checklist
             binding.checklistContainerPreview.visibility = View.VISIBLE
             binding.noteDesc.visibility = View.GONE
 
@@ -75,6 +89,7 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                     )
+                    setBackgroundColor(parsedColor)
                 }
                 val checkBox = CheckBox(holder.itemView.context).apply {
                     isClickable = false
@@ -87,7 +102,9 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                     )
+                    setBackgroundColor(parsedColor)
                 }
+
 
                 rowLayout.addView(checkBox)
                 rowLayout.addView(textView)
@@ -95,18 +112,18 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
             }
 
         } catch (e: Exception) {
+            // Notă normală (fără checklist)
             binding.noteDesc.text = noteDesc
         }
 
         holder.itemView.setOnClickListener {
-            val note = currentNote
             val bundle = Bundle().apply {
-                putParcelable("note", note)
+                putParcelable("note", currentNote)
             }
             it.findNavController().navigate(R.id.editNoteFragment, bundle)
         }
-
-
     }
+
+
 
 }

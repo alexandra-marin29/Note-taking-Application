@@ -1,6 +1,7 @@
 package com.example.noteapp.fragments
 
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
 import android.view.*
@@ -10,6 +11,7 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
@@ -30,10 +32,9 @@ class CheckListFragment : Fragment(), MenuProvider {
     private val binding get() = _binding!!
 
     private lateinit var notesViewModel: NoteViewModel
-
-
     private val args: CheckListFragmentArgs by navArgs()
     private var currentNote: Note? = null
+    private var selectedColorHex: String = "#FFFFFFFF"
 
     private lateinit var checkListContainer: LinearLayout
     private lateinit var checklistTitleEditText: EditText
@@ -45,7 +46,6 @@ class CheckListFragment : Fragment(), MenuProvider {
         _binding = FragmentCheckListBinding.inflate(inflater, container, false)
         return binding.root
     }
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -64,6 +64,7 @@ class CheckListFragment : Fragment(), MenuProvider {
         } else {
             val noteTitle = currentNote!!.noteTitle
             val noteDesc = currentNote!!.noteDesc
+            selectedColorHex = currentNote!!.noteColor ?: "#FFFFFFFF"
 
             checklistTitleEditText.setText(noteTitle)
             if (noteDesc.isNotEmpty()) {
@@ -71,6 +72,7 @@ class CheckListFragment : Fragment(), MenuProvider {
             } else {
                 addCheckListRow()
             }
+            applyColorToDescription(selectedColorHex)
         }
     }
 
@@ -89,7 +91,6 @@ class CheckListFragment : Fragment(), MenuProvider {
         }
     }
 
-
     private fun addCheckListRow(initialText: String = "", checked: Boolean = false): EditText {
         val rowLayout = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -100,11 +101,8 @@ class CheckListFragment : Fragment(), MenuProvider {
         }
 
         val checkBox = CheckBox(requireContext()).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
             isChecked = checked
+            setBackgroundColor(Color.TRANSPARENT)
         }
 
         val editText = EditText(requireContext()).apply {
@@ -114,40 +112,29 @@ class CheckListFragment : Fragment(), MenuProvider {
                 1f
             )
             textSize = 18f
-            hint = "Enter item..."
             setSingleLine(false)
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
             setText(initialText)
+            background = null
 
             setOnKeyListener { _, keyCode, event ->
                 if (event.action == KeyEvent.ACTION_DOWN) {
-                    when (keyCode) {
-                        KeyEvent.KEYCODE_ENTER -> {
-
-                            return@setOnKeyListener false
-                        }
-                        KeyEvent.KEYCODE_DPAD_DOWN -> {
-                            val newEdit = addCheckListRow("", false)
-                            newEdit.requestFocus()
-                            val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                            imm.showSoftInput(newEdit, InputMethodManager.SHOW_IMPLICIT)
-                            return@setOnKeyListener true
-                        }
-                    }
-                }
-                false
+                    if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                        val newEdit = addCheckListRow("", false)
+                        newEdit.requestFocus()
+                        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                        imm.showSoftInput(newEdit, InputMethodManager.SHOW_IMPLICIT)
+                        true
+                    } else false
+                } else false
             }
         }
 
         rowLayout.addView(checkBox)
         rowLayout.addView(editText)
         checkListContainer.addView(rowLayout)
-
         return editText
     }
-
-
-
 
     private fun saveCheckList() {
         val title = checklistTitleEditText.text.toString().trim()
@@ -169,15 +156,17 @@ class CheckListFragment : Fragment(), MenuProvider {
         }
 
         val noteDesc = jsonArray.toString()
+        val finalColor = selectedColorHex
+
         if (currentNote == null) {
-            val newNote = Note(id=0, noteTitle=title, noteDesc=noteDesc)
+            val newNote = Note(id = 0, noteTitle = title, noteDesc = noteDesc, noteColor = finalColor)
             notesViewModel.addNote(newNote)
             Toast.makeText(requireContext(), "Checklist Note Saved", Toast.LENGTH_SHORT).show()
         } else {
-            val updatedNote = Note(
-                id = currentNote!!.id,
+            val updatedNote = currentNote!!.copy(
                 noteTitle = title,
-                noteDesc = noteDesc
+                noteDesc = noteDesc,
+                noteColor = finalColor
             )
             notesViewModel.updateNote(updatedNote)
             Toast.makeText(requireContext(), "Checklist Note Updated", Toast.LENGTH_SHORT).show()
@@ -191,13 +180,59 @@ class CheckListFragment : Fragment(), MenuProvider {
     }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-        return when(menuItem.itemId) {
+        return when (menuItem.itemId) {
             R.id.saveMenu -> {
                 saveCheckList()
                 true
             }
+            R.id.settingsMenu -> {
+                showColorPickerDialog()
+                true
+            }
             else -> false
         }
+    }
+
+    private fun showColorPickerDialog() {
+        val colors = arrayOf("White", "Pink", "Green", "Purple", "Orange", "Yellow", "Blue")
+        val colorsHex = arrayOf(
+            "#FFFFFFFF", // White
+            "#FFF2CDC4", // Pink pastel
+            "#FFE5F5DC", // Green pastel
+            "#FFDBCDF0", // Purple pastel
+            "#FFF7D9C4", // Orange pastel
+            "#FFFAEDCB", // Yellow pastel
+            "#FFC6DEF1"  // Blue pastel
+        )
+
+
+        AlertDialog.Builder(requireContext()).apply {
+            setTitle("Choose a color")
+            setItems(colors) { _, which ->
+                val newColorHex = colorsHex[which]
+                applyColorToDescription(newColorHex)
+            }
+            create()
+            show()
+        }
+    }
+
+    private fun applyColorToDescription(colorHex: String) {
+        selectedColorHex = colorHex
+        val chosenColor = Color.parseColor(colorHex)
+
+        checklistTitleEditText.setBackgroundColor(chosenColor)
+
+        for (i in 0 until checkListContainer.childCount) {
+            val row = checkListContainer.getChildAt(i) as LinearLayout
+            val checkBox = row.getChildAt(0) as CheckBox
+            val editText = row.getChildAt(1) as EditText
+            row.setBackgroundColor(chosenColor)
+            checkBox.setBackgroundColor(Color.TRANSPARENT)
+            editText.setBackgroundColor(chosenColor)
+        }
+
+        currentNote = currentNote?.copy(noteColor = colorHex) ?: currentNote
     }
 
     override fun onDestroyView() {
