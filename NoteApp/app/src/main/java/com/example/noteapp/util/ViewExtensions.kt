@@ -15,7 +15,7 @@ fun createColorBorderDrawable(context: Context, colorHex: String): Drawable {
         setColor(chosenColor)
     }
 
-    val borderDrawable = ContextCompat.getDrawable(context, R.drawable.pink_border)!!
+    val borderDrawable = ContextCompat.getDrawable(context, R.drawable.gray_border)!!
 
     val layers = arrayOf<Drawable>(colorDrawable, borderDrawable)
     return LayerDrawable(layers)

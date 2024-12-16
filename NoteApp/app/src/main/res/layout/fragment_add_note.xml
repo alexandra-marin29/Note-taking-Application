@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:text="Add Note."
             android:textStyle="bold"
-            android:textColor="@color/red"
+            android:textColor="@color/black"
             android:textSize="24sp"
             android:fontFamily="@font/poppins"
             android:layout_marginTop="16dp"/>
@@ -32,7 +32,7 @@
             android:fontFamily="@font/poppins"
             android:layout_below="@id/addNoteHeading"
             android:layout_marginTop="16dp"
-            android:background="@drawable/pink_border"/>
+            android:background="@drawable/gray_border"/>
 
         <EditText
             android:id="@+id/addNoteDesc"
@@ -45,6 +45,6 @@
             android:fontFamily="@font/poppins"
             android:layout_below="@id/addNoteTitle"
             android:layout_marginTop="12dp"
-            android:background="@drawable/pink_border"/>
+            android:background="@drawable/gray_border"/>
     </RelativeLayout>
 </layout>

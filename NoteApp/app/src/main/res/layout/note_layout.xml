@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:background="@drawable/pink_border"
+            android:background="@drawable/gray_border"
             android:padding="16dp">
 
             <TextView
@@ -23,11 +23,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="200"
-                android:textColor="@color/red"
+                android:textColor="@color/black"
                 android:fontFamily="@font/poppins"
                 android:text="Note Title"
                 android:textStyle="bold"
-                android:textSize="18sp"/>
+                android:textSize="20sp"/>
 
             <LinearLayout
                 android:id="@+id/checklistContainerPreview"
@@ -48,7 +48,7 @@
                 android:maxLines="3"
                 android:ellipsize="end"
                 android:fontFamily="@font/poppins"
-                android:textColor="@color/pink"/>
+                android:textColor="@color/dark_gray"/>
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>

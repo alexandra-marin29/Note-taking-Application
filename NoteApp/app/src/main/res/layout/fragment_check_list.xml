@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:background="@drawable/pink_border"
+            android:background="@drawable/gray_border"
             android:padding="12dp">
 
             <TextView
@@ -26,7 +26,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Add Checklist Note."
-                android:textColor="@color/red"
+                android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
@@ -39,7 +39,7 @@
                 android:maxLines="1"
                 android:padding="12dp"
                 android:textSize="20sp"
-                android:background="@drawable/pink_border" />
+                android:background="@drawable/gray_border" />
 
             <LinearLayout
                 android:id="@+id/checkListContainer"
