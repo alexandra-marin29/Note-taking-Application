@@ -52,7 +52,8 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
                 id = 0,
                 noteTitle = noteTitle,
                 noteDesc = noteDesc,
-                noteColor = selectedColorHex
+                noteColor = selectedColorHex,
+                dateCreated = System.currentTimeMillis()
             )
             notesViewModel.addNote(note)
             Toast.makeText(requireContext(), "Note Saved", Toast.LENGTH_SHORT).show()
@@ -61,6 +62,7 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
             Toast.makeText(requireContext(), "Please enter note title", Toast.LENGTH_SHORT).show()
         }
     }
+
 
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menu.clear()

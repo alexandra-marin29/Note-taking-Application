@@ -25,7 +25,7 @@
                 android:id="@+id/checklistHeading"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Add Checklist Note."
+                android:text="Add Checklist Note"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -41,13 +41,23 @@
                 android:textSize="20sp"
                 android:background="@drawable/gray_border" />
 
+            <TextView
+                android:id="@+id/checklistDateTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textSize="12sp"
+                android:textColor="@color/dark_gray"
+                android:fontFamily="@font/poppins"
+                android:text=""/>
+
             <LinearLayout
                 android:id="@+id/checkListContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:orientation="vertical"
-              />
+                />
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>

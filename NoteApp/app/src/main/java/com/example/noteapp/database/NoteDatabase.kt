@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.noteapp.model.Note
 
 
-@Database(entities = [Note::class], version = 2)
+@Database(entities = [Note::class], version = 3)
 
 abstract class NoteDatabase: RoomDatabase() {
     abstract fun getNoteDao(): NoteDao
@@ -32,7 +32,7 @@ abstract class NoteDatabase: RoomDatabase() {
                 NoteDatabase::class.java,
                 "note_db"
             )
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_2_3)
                 .build()
 
         private val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -40,6 +40,11 @@ abstract class NoteDatabase: RoomDatabase() {
                 database.execSQL("ALTER TABLE notes ADD COLUMN noteColor TEXT NOT NULL DEFAULT '#FFFFFFFF'")
             }
 
+        }
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE notes ADD COLUMN dateCreated INTEGER NOT NULL DEFAULT 0")
+            }
         }
     }
 }

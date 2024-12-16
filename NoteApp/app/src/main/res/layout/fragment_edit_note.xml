@@ -9,7 +9,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="12dp"
-        tools:context=".UpdateNoteFragment">
+        tools:context=".fragments.EditNoteFragment">
 
         <TextView
             android:id="@+id/editNoteHeading"
@@ -18,7 +18,7 @@
             android:layout_alignParentTop="true"
             android:layout_marginTop="16dp"
             android:fontFamily="@font/poppins"
-            android:text="Edit Note."
+            android:text="Edit Note"
             android:textStyle="bold"
             android:textColor="@color/black"
             android:textSize="24sp" />
@@ -36,11 +36,23 @@
             android:maxLines="1"
             android:fontFamily="@font/poppins"/>
 
+        <!-- TextView pentru data și ora sub titlu -->
+        <TextView
+            android:id="@+id/editNoteDateTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/editNoteTitle"
+            android:layout_marginTop="8dp"
+            android:textSize="12sp"
+            android:textColor="@color/dark_gray"
+            android:fontFamily="@font/poppins"
+            android:text=""/>
+
         <LinearLayout
             android:id="@+id/editChecklistContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/editNoteTitle"
+            android:layout_below="@id/editNoteDateTime"
             android:layout_marginTop="12dp"
             android:orientation="vertical"
             android:visibility="gone"/>
@@ -55,7 +67,7 @@
             android:textSize="18sp"
             android:fontFamily="@font/poppins"
             android:background="@drawable/gray_border"
-            android:layout_below="@id/editNoteTitle"
+            android:layout_below="@id/editNoteDateTime"
             android:layout_marginTop="12dp" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -66,7 +78,7 @@
             android:layout_marginBottom="20dp"
             android:clickable="true"
             android:backgroundTint="@color/blue"
-            android:tintMode="@color/white"
+            android:tint="@color/white"
             android:src="@drawable/baseline_done_24"
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"

@@ -2,9 +2,9 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.NoteApp" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <!-- Primary brand color -->
-        <item name="colorPrimary">@color/light_blue</item> <!-- Fundal primar -->
+        <item name="colorPrimary">@color/light_blue</item>
         <item name="colorPrimaryVariant">@color/blue</item>
-        <item name="colorOnPrimary">@color/black</item> <!-- Text negru pe fundal primar -->
+        <item name="colorOnPrimary">@color/black</item>
         <!-- Secondary brand color -->
         <item name="colorSecondary">@color/blue</item>
         <item name="colorSecondaryVariant">@color/blue</item>

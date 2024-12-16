@@ -19,6 +19,8 @@ import androidx.cardview.widget.CardView
 import androidx.core.os.bundleOf
 import com.example.noteapp.R
 import org.json.JSONArray
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
@@ -56,17 +58,13 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
         val noteColorHex = currentNote.noteColor ?: "#FFFFFFFF"
         val parsedColor = Color.parseColor(noteColorHex)
 
-        // Setează culoarea pe card
         binding.noteCardView.setCardBackgroundColor(parsedColor)
 
-        // Setează culoarea pe titlu și descriere
         binding.noteTitle.setBackgroundColor(parsedColor)
         binding.noteDesc.setBackgroundColor(parsedColor)
 
-        // Setează textul titlului
         binding.noteTitle.text = currentNote.noteTitle
 
-        // Curăță vechile checkboxuri dacă sunt
         binding.checklistContainerPreview.removeAllViews()
         binding.checklistContainerPreview.visibility = View.GONE
         binding.noteDesc.visibility = View.VISIBLE
@@ -74,7 +72,6 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
         val noteDesc = currentNote.noteDesc
         try {
             val jsonArray = JSONArray(noteDesc)
-            // Avem checklist
             binding.checklistContainerPreview.visibility = View.VISIBLE
             binding.noteDesc.visibility = View.GONE
 
@@ -112,9 +109,12 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
             }
 
         } catch (e: Exception) {
-            // Notă normală (fără checklist)
             binding.noteDesc.text = noteDesc
         }
+
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        val dateString = sdf.format(Date(currentNote.dateCreated))
+        binding.noteDateTime.text = dateString
 
         holder.itemView.setOnClickListener {
             val bundle = Bundle().apply {

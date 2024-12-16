@@ -159,20 +159,29 @@ class CheckListFragment : Fragment(), MenuProvider {
         val finalColor = selectedColorHex
 
         if (currentNote == null) {
-            val newNote = Note(id = 0, noteTitle = title, noteDesc = noteDesc, noteColor = finalColor)
+            val newNote = Note(
+                id = 0,
+                noteTitle = title,
+                noteDesc = noteDesc,
+                noteColor = finalColor,
+                dateCreated = System.currentTimeMillis()
+            )
             notesViewModel.addNote(newNote)
             Toast.makeText(requireContext(), "Checklist Note Saved", Toast.LENGTH_SHORT).show()
         } else {
             val updatedNote = currentNote!!.copy(
                 noteTitle = title,
                 noteDesc = noteDesc,
-                noteColor = finalColor
+                noteColor = finalColor,
+                dateCreated = System.currentTimeMillis()
             )
             notesViewModel.updateNote(updatedNote)
             Toast.makeText(requireContext(), "Checklist Note Updated", Toast.LENGTH_SHORT).show()
         }
+
         findNavController().popBackStack(R.id.homeFragment, false)
     }
+
 
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menu.clear()

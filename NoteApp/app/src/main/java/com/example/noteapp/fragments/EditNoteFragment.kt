@@ -22,6 +22,9 @@ import com.example.noteapp.util.createColorBorderDrawable
 import com.example.noteapp.viewmodel.NoteViewModel
 import org.json.JSONArray
 import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.*
+
 
 class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
@@ -70,6 +73,9 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
         binding.editNoteFab.setOnClickListener {
             updateNote()
         }
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        val dateString = sdf.format(Date(currentNote.dateCreated))
+        binding.editNoteDateTime.text = dateString
     }
 
     private fun tryLoadChecklist(jsonString: String): Boolean {
@@ -142,11 +148,14 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
         val updatedNote = currentNote.copy(
             noteTitle = noteTitle,
             noteDesc = finalDesc,
-            noteColor = currentNote.noteColor
+            noteColor = currentNote.noteColor,
+            dateCreated = System.currentTimeMillis()
         )
+
         notesViewModel.updateNote(updatedNote)
         view?.findNavController()?.popBackStack(R.id.homeFragment, false)
     }
+
 
     private fun deleteNote() {
         AlertDialog.Builder(requireActivity()).apply {
