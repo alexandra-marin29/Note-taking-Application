@@ -25,4 +25,13 @@ interface NoteDao {
 
     @Query("SELECT * FROM NOTES WHERE noteTitle LIKE :query OR noteDesc LIKE :query")
     fun searchNote(query: String?): LiveData<List<Note>>
+
+    @Query("SELECT * FROM notes ORDER BY noteTitle ASC")
+    fun getNotesSortedByTitle(): LiveData<List<Note>>
+
+    @Query("SELECT * FROM notes ORDER BY dateCreated DESC")
+    fun getNotesSortedByDateDesc(): LiveData<List<Note>>
+
+    @Query("SELECT * FROM notes ORDER BY dateCreated ASC")
+    fun getNotesSortedByDateAsc(): LiveData<List<Note>>
 }

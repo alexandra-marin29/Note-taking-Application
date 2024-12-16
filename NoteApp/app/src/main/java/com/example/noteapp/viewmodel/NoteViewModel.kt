@@ -27,5 +27,7 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
 
     fun searchNote(query: String?) =
         noteRepository.searchNote(query)
-
+    fun getNotesSortedByTitle() = noteRepository.getNotesSortedByTitle()
+    fun getNotesSortedByDateDesc() = noteRepository.getNotesSortedByDateDesc()
+    fun getNotesSortedByDateAsc() = noteRepository.getNotesSortedByDateAsc()
 }

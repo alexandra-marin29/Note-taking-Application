@@ -1,5 +1,6 @@
 package com.example.noteapp.fragments
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -20,6 +21,12 @@ import com.example.noteapp.adapter.NoteAdapter
 import com.example.noteapp.databinding.FragmentHomeBinding
 import com.example.noteapp.model.Note
 import com.example.noteapp.viewmodel.NoteViewModel
+import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.GridLayoutManager
+
+
+private const val PREFS_NAME = "note_prefs"
+private const val KEY_SORT_INDEX = "sort_index"
 
 class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextListener, MenuProvider{
 
@@ -28,12 +35,13 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
 
     private lateinit var notesViewModel: NoteViewModel
     private lateinit var noteAdapter: NoteAdapter
+    private var selectedSortOptionIndex = 1
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         homeBinding = FragmentHomeBinding.inflate(inflater,container, false)
         return binding.root
 
@@ -42,10 +50,16 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val menuHost: MenuHost = requireActivity()
-        menuHost.addMenuProvider( this, viewLifecycleOwner,Lifecycle.State.RESUMED )
+        menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         notesViewModel = (activity as MainActivity).noteViewModel
+
+        val prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        selectedSortOptionIndex = prefs.getInt(KEY_SORT_INDEX, 1) // 1 = Newest first
+
         setupHomeRecyclerView()
+
+        applySorting(selectedSortOptionIndex)
 
         binding.addNoteFab.setOnClickListener {
             it.findNavController().navigate(R.id.action_global_addNoteFragment)
@@ -54,11 +68,39 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
         binding.checkBoxFab.setOnClickListener {
             it.findNavController().navigate(R.id.action_global_checkListFragment)
         }
-
-
-
-
     }
+
+
+
+    private fun applySorting(index: Int) {
+        when (index) {
+            0 -> {
+                notesViewModel.getNotesSortedByTitle().observe(viewLifecycleOwner) { notes ->
+                    noteAdapter.differ.submitList(notes)
+                    noteAdapter.notifyDataSetChanged()
+                    updateUI(notes)
+                    (binding.homeRecyclerView.layoutManager as? StaggeredGridLayoutManager)?.invalidateSpanAssignments()
+                }
+            }
+            1 -> {
+                notesViewModel.getNotesSortedByDateDesc().observe(viewLifecycleOwner) { notes ->
+                    noteAdapter.differ.submitList(notes)
+                    noteAdapter.notifyDataSetChanged()
+                    updateUI(notes)
+                    (binding.homeRecyclerView.layoutManager as? StaggeredGridLayoutManager)?.invalidateSpanAssignments()
+                }
+            }
+            2 -> {
+                notesViewModel.getNotesSortedByDateAsc().observe(viewLifecycleOwner) { notes ->
+                    noteAdapter.differ.submitList(notes)
+                    noteAdapter.notifyDataSetChanged()
+                    updateUI(notes)
+                    (binding.homeRecyclerView.layoutManager as? StaggeredGridLayoutManager)?.invalidateSpanAssignments()
+                }
+            }
+        }
+    }
+
 
     private fun updateUI(note: List<Note>?){
         if(note != null){
@@ -74,21 +116,18 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
     }
 
 
-    private fun setupHomeRecyclerView(){
+    private fun setupHomeRecyclerView() {
         noteAdapter = NoteAdapter()
+        val layoutManager = GridLayoutManager(context, 2)
         binding.homeRecyclerView.apply {
-            layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+            this.layoutManager = layoutManager
             setHasFixedSize(true)
             adapter = noteAdapter
         }
-        activity?.let {
-            notesViewModel.getAllNotes().observe(viewLifecycleOwner){note->
-                noteAdapter.differ.submitList(note)
-                updateUI(note)
 
-            }
-        }
+
     }
+
 
     private fun searchNote(query: String?) {
         val searchQuery = "%${query}%"
@@ -125,7 +164,35 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
     }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-        return false
+        return when (menuItem.itemId) {
+            R.id.sortMenu -> {
+                showSortDialog()
+                true
+            }
+            else -> false
+        }
     }
+
+    private fun showSortDialog() {
+        val sortOptions = arrayOf("Sort by Title", "Sort by Date (Newest First)", "Sort by Date (Oldest First)")
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Sort Notes")
+            .setSingleChoiceItems(sortOptions, selectedSortOptionIndex) { _, which ->
+                selectedSortOptionIndex = which
+            }
+            .setPositiveButton("OK") { dialog, _ ->
+                val prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                prefs.edit().putInt(KEY_SORT_INDEX, selectedSortOptionIndex).apply()
+
+                applySorting(selectedSortOptionIndex)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .create()
+            .show()
+    }
+
+
 
 }
