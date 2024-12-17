@@ -17,6 +17,7 @@ import com.example.noteapp.MainActivity
 import com.example.noteapp.R
 import com.example.noteapp.databinding.FragmentEditNoteBinding
 import com.example.noteapp.model.Note
+import com.example.noteapp.util.createColorBorderDrawable
 import com.example.noteapp.viewmodel.NoteViewModel
 import org.json.JSONArray
 import org.json.JSONObject
@@ -166,12 +167,14 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
     }
 
     private fun applyColorToNoteContent(colorHex: String) {
-        val chosenColor = Color.parseColor(colorHex)
+        selectedColorHex = colorHex
+        val drawable = createColorBorderDrawable(requireContext(), colorHex)
 
-        binding.editNoteTitle.setBackgroundColor(chosenColor)
-        binding.editNoteDesc.setBackgroundColor(chosenColor)
-        binding.editChecklistContainer.setBackgroundColor(chosenColor)
+        binding.editNoteTitle.background = drawable
+        binding.editNoteDesc.background = drawable
+        binding.editChecklistContainer.background = drawable
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
