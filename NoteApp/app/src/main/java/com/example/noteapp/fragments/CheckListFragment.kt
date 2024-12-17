@@ -38,6 +38,7 @@ class CheckListFragment : Fragment(R.layout.fragment_check_list), MenuProvider {
     private lateinit var checklistTitleEditText: EditText
 
     private var folderId: Int = 1 // implicit Notes
+    private var isPinned: Boolean = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -60,6 +61,7 @@ class CheckListFragment : Fragment(R.layout.fragment_check_list), MenuProvider {
         arguments?.let {
             folderId = it.getInt("folderId", 1)
             currentNote = it.getParcelable("note")
+            isPinned = currentNote?.isPinned ?: false
         }
 
         if (currentNote == null) {
@@ -166,7 +168,8 @@ class CheckListFragment : Fragment(R.layout.fragment_check_list), MenuProvider {
                 noteDesc = noteDesc,
                 noteColor = finalColor,
                 dateCreated = dateNow,
-                folderId = folderId
+                folderId = folderId,
+                isPinned = isPinned
             )
             notesViewModel.addNote(newNote)
             Toast.makeText(requireContext(), "Checklist Note Saved", Toast.LENGTH_SHORT).show()
@@ -175,7 +178,8 @@ class CheckListFragment : Fragment(R.layout.fragment_check_list), MenuProvider {
                 noteTitle = title,
                 noteDesc = noteDesc,
                 noteColor = finalColor,
-                dateCreated = dateNow
+                dateCreated = dateNow,
+                isPinned = isPinned
             )
             notesViewModel.updateNote(updatedNote)
             Toast.makeText(requireContext(), "Checklist Note Updated", Toast.LENGTH_SHORT).show()
@@ -187,12 +191,27 @@ class CheckListFragment : Fragment(R.layout.fragment_check_list), MenuProvider {
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menu.clear()
         menuInflater.inflate(R.menu.menu_add_note, menu)
+        val pinMenuItem = menu.findItem(R.id.pinMenu)
+        if (isPinned) {
+            pinMenuItem.setIcon(R.drawable.baseline_push_pin_24)
+        } else {
+            pinMenuItem.setIcon(R.drawable.baseline_push_pin_outline_24)
+        }
     }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
         return when (menuItem.itemId) {
             R.id.saveMenu -> {
                 saveCheckList()
+                true
+            }
+            R.id.pinMenu -> {
+                isPinned = !isPinned
+                if (isPinned) {
+                    menuItem.setIcon(R.drawable.baseline_push_pin_24)
+                } else {
+                    menuItem.setIcon(R.drawable.baseline_push_pin_outline_24)
+                }
                 true
             }
             R.id.settingsMenu -> {

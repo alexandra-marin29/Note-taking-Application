@@ -14,7 +14,6 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/gray_border"
             android:padding="16dp">
 
             <TextView
@@ -67,6 +66,13 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/barrier"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="noteDesc,checklistContainerPreview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
             <TextView
                 android:id="@+id/noteDateTime"
                 android:layout_width="wrap_content"
@@ -76,7 +82,7 @@
                 android:textSize="12sp"
                 android:fontFamily="@font/poppins"
                 android:text=""
-                app:layout_constraintTop_toBottomOf="@id/noteDesc"
+                app:layout_constraintTop_toBottomOf="@id/barrier"
                 app:layout_constraintEnd_toEndOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
