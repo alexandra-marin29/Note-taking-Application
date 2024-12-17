@@ -4,26 +4,22 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.noteapp.model.Folder
 import com.example.noteapp.model.Note
 
-
-@Database(entities = [Note::class], version = 3)
-
-abstract class NoteDatabase: RoomDatabase() {
+@Database(entities = [Note::class, Folder::class], version = 5)
+abstract class NoteDatabase : RoomDatabase() {
     abstract fun getNoteDao(): NoteDao
+    abstract fun getFolderDao(): FolderDao
 
     companion object {
         @Volatile
         private var instance: NoteDatabase? = null
         private val LOCK = Any()
 
-        operator fun invoke(context: Context) = instance ?: synchronized(LOCK)
-        {
-            instance ?: createDatabase(context).also {
-                instance = it
-            }
+        operator fun invoke(context: Context) = instance ?: synchronized(LOCK) {
+            instance ?: createDatabase(context).also { instance = it }
         }
 
         private fun createDatabase(context: Context) =
@@ -32,19 +28,13 @@ abstract class NoteDatabase: RoomDatabase() {
                 NoteDatabase::class.java,
                 "note_db"
             )
-                .addMigrations(MIGRATION_2_3)
+                .fallbackToDestructiveMigration()
+                .addCallback(object : RoomDatabase.Callback() {
+                    override fun onCreate(db: SupportSQLiteDatabase) {
+                        super.onCreate(db)
+                        db.execSQL("INSERT INTO folders (id, folderName) VALUES (1, 'Notes')")
+                    }
+                })
                 .build()
-
-        private val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE notes ADD COLUMN noteColor TEXT NOT NULL DEFAULT '#FFFFFFFF'")
-            }
-
-        }
-        private val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE notes ADD COLUMN dateCreated INTEGER NOT NULL DEFAULT 0")
-            }
-        }
     }
 }

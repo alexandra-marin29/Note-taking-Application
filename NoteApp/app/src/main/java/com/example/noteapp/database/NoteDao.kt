@@ -19,19 +19,18 @@ interface NoteDao {
 
     @Delete
     suspend fun deleteNote(note: Note)
+    @Query("SELECT * FROM notes WHERE folderId = :folderId ORDER BY id DESC")
+    fun getAllNotesByFolder(folderId: Int): LiveData<List<Note>>
 
-    @Query("SELECT * FROM NOTES ORDER BY id DESC")
-    fun getAllNotes(): LiveData<List<Note>>
+    @Query("SELECT * FROM NOTES WHERE (noteTitle LIKE :query OR noteDesc LIKE :query) AND folderId = :folderId")
+    fun searchNoteInFolder(query: String?, folderId: Int): LiveData<List<Note>>
 
-    @Query("SELECT * FROM NOTES WHERE noteTitle LIKE :query OR noteDesc LIKE :query")
-    fun searchNote(query: String?): LiveData<List<Note>>
+    @Query("SELECT * FROM notes WHERE folderId = :folderId ORDER BY noteTitle ASC")
+    fun getNotesSortedByTitle(folderId: Int): LiveData<List<Note>>
 
-    @Query("SELECT * FROM notes ORDER BY noteTitle ASC")
-    fun getNotesSortedByTitle(): LiveData<List<Note>>
+    @Query("SELECT * FROM notes WHERE folderId = :folderId ORDER BY dateCreated DESC")
+    fun getNotesSortedByDateDesc(folderId: Int): LiveData<List<Note>>
 
-    @Query("SELECT * FROM notes ORDER BY dateCreated DESC")
-    fun getNotesSortedByDateDesc(): LiveData<List<Note>>
-
-    @Query("SELECT * FROM notes ORDER BY dateCreated ASC")
-    fun getNotesSortedByDateAsc(): LiveData<List<Note>>
+    @Query("SELECT * FROM notes WHERE folderId = :folderId ORDER BY dateCreated ASC")
+    fun getNotesSortedByDateAsc(folderId: Int): LiveData<List<Note>>
 }

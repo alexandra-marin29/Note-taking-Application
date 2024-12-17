@@ -1,78 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
-<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+<navigation
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/homeFragment">
+    app:startDestination="@id/foldersFragment">
 
+    <!-- FoldersFragment -->
     <fragment
-        android:id="@+id/homeFragment"
-        android:name="com.example.noteapp.fragments.HomeFragment"
-        android:label="fragment_home"
-        tools:layout="@layout/fragment_home" >
+        android:id="@+id/foldersFragment"
+        android:name="com.example.noteapp.fragments.FoldersFragment"
+        android:label="Folders">
+        <!-- Navigate to HomeFragment -->
         <action
-            android:id="@+id/action_homeFragment_to_addNoteFragment"
-            app:destination="@id/addNoteFragment" />
+            android:id="@+id/action_foldersFragment_to_homeFragment"
+            app:destination="@id/homeFragment">
+            <argument
+                android:name="folderId"
+                app:argType="integer"
+                android:defaultValue="1" />
+        </action>
+
+        <!-- Navigate to AddNoteFragment -->
         <action
-            android:id="@+id/action_homeFragment_to_editNoteFragment"
-            app:destination="@id/editNoteFragment" />
+            android:id="@+id/action_foldersFragment_to_addNoteFragment"
+            app:destination="@id/addNoteFragment">
+            <argument
+                android:name="folderId"
+                app:argType="integer"
+                android:defaultValue="1" />
+        </action>
+
+        <!-- Navigate to CheckListFragment -->
         <action
-            android:id="@+id/action_homeFragment_to_checklistNoteFragment"
-            app:destination="@id/checkListFragment" />
-        <action
-            android:id="@+id/action_homeFragment_to_editChecklistNoteFragment"
-            app:destination="@id/checkListFragment" >
+            android:id="@+id/action_foldersFragment_to_checkListFragment"
+            app:destination="@id/checkListFragment">
+            <argument
+                android:name="folderId"
+                app:argType="integer"
+                android:defaultValue="1" />
             <argument
                 android:name="note"
                 app:argType="com.example.noteapp.model.Note"
                 app:nullable="true" />
         </action>
-
     </fragment>
 
+    <!-- HomeFragment -->
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.noteapp.fragments.HomeFragment"
+        android:label="Home">
+        <!-- Navigate to AddNoteFragment -->
+        <action
+            android:id="@+id/action_homeFragment_to_addNoteFragment"
+            app:destination="@id/addNoteFragment">
+            <argument
+                android:name="folderId"
+                app:argType="integer" />
+        </action>
+
+        <!-- Navigate to CheckListFragment -->
+        <action
+            android:id="@+id/action_homeFragment_to_checkListFragment"
+            app:destination="@id/checkListFragment">
+            <argument
+                android:name="folderId"
+                app:argType="integer" />
+            <argument
+                android:name="note"
+                app:argType="com.example.noteapp.model.Note"
+                app:nullable="true" />
+        </action>
+        <action
+            android:id="@+id/action_homeFragment_to_editNoteFragment"
+            app:destination="@id/editNoteFragment">
+            <argument
+                android:name="note"
+                app:argType="com.example.noteapp.model.Note"
+                app:nullable="true" />
+        </action>
+    </fragment>
+
+    <!-- AddNoteFragment -->
     <fragment
         android:id="@+id/addNoteFragment"
         android:name="com.example.noteapp.fragments.AddNoteFragment"
-        android:label="fragment_add_note"
-        tools:layout="@layout/fragment_add_note" >
-        <action
-            android:id="@+id/action_addNoteFragment_to_homeFragment"
-            app:destination="@id/homeFragment" />
+        android:label="Add Note">
     </fragment>
 
+    <!-- CheckListFragment -->
     <fragment
         android:id="@+id/checkListFragment"
         android:name="com.example.noteapp.fragments.CheckListFragment"
-        android:label="CheckListFragment"
-        tools:layout="@layout/fragment_check_list" >
-
-        <argument
-            android:name="note"
-            app:argType="com.example.noteapp.model.Note"
-            app:nullable="true"
-            android:defaultValue="@null"/>
+        android:label="Checklist">
     </fragment>
 
-
+    <!-- EditNoteFragment -->
     <fragment
         android:id="@+id/editNoteFragment"
         android:name="com.example.noteapp.fragments.EditNoteFragment"
-        android:label="fragment_edit_note"
-        tools:layout="@layout/fragment_edit_note" >
-        <action
-            android:id="@+id/action_editNoteFragment_to_homeFragment"
-            app:destination="@id/homeFragment" />
-
+        android:label="Edit Note">
         <argument
-            android:name = "note"
+            android:name="note"
             app:argType="com.example.noteapp.model.Note"
-            app:nullable="true"/>
-
+            app:nullable="true" />
     </fragment>
-    <action
-        android:id="@+id/action_global_checkListFragment"
-        app:destination="@id/checkListFragment" />
-    <action
-        android:id="@+id/action_global_addNoteFragment"
-        app:destination="@id/addNoteFragment"/>
 </navigation>

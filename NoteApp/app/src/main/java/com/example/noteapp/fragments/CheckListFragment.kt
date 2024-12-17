@@ -17,7 +17,6 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import com.example.noteapp.MainActivity
 import com.example.noteapp.R
 import com.example.noteapp.databinding.FragmentCheckListBinding
@@ -26,18 +25,19 @@ import com.example.noteapp.viewmodel.NoteViewModel
 import org.json.JSONArray
 import org.json.JSONObject
 
-class CheckListFragment : Fragment(), MenuProvider {
+class CheckListFragment : Fragment(R.layout.fragment_check_list), MenuProvider {
 
     private var _binding: FragmentCheckListBinding? = null
     private val binding get() = _binding!!
 
     private lateinit var notesViewModel: NoteViewModel
-    private val args: CheckListFragmentArgs by navArgs()
     private var currentNote: Note? = null
     private var selectedColorHex: String = "#FFFFFFFF"
 
     private lateinit var checkListContainer: LinearLayout
     private lateinit var checklistTitleEditText: EditText
+
+    private var folderId: Int = 1 // implicit Notes
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -57,7 +57,10 @@ class CheckListFragment : Fragment(), MenuProvider {
         checkListContainer = binding.checkListContainer
         checklistTitleEditText = binding.checklistTitle
 
-        currentNote = args.note
+        arguments?.let {
+            folderId = it.getInt("folderId", 1)
+            currentNote = it.getParcelable("note")
+        }
 
         if (currentNote == null) {
             addCheckListRow()
@@ -99,17 +102,13 @@ class CheckListFragment : Fragment(), MenuProvider {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
-
         val checkBox = CheckBox(requireContext()).apply {
             isChecked = checked
             setBackgroundColor(Color.TRANSPARENT)
         }
-
         val editText = EditText(requireContext()).apply {
             layoutParams = LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
             )
             textSize = 18f
             setSingleLine(false)
@@ -158,13 +157,16 @@ class CheckListFragment : Fragment(), MenuProvider {
         val noteDesc = jsonArray.toString()
         val finalColor = selectedColorHex
 
+        val dateNow = System.currentTimeMillis()
+
         if (currentNote == null) {
             val newNote = Note(
                 id = 0,
                 noteTitle = title,
                 noteDesc = noteDesc,
                 noteColor = finalColor,
-                dateCreated = System.currentTimeMillis()
+                dateCreated = dateNow,
+                folderId = folderId
             )
             notesViewModel.addNote(newNote)
             Toast.makeText(requireContext(), "Checklist Note Saved", Toast.LENGTH_SHORT).show()
@@ -173,15 +175,14 @@ class CheckListFragment : Fragment(), MenuProvider {
                 noteTitle = title,
                 noteDesc = noteDesc,
                 noteColor = finalColor,
-                dateCreated = System.currentTimeMillis()
+                dateCreated = dateNow
             )
             notesViewModel.updateNote(updatedNote)
             Toast.makeText(requireContext(), "Checklist Note Updated", Toast.LENGTH_SHORT).show()
         }
 
-        findNavController().popBackStack(R.id.homeFragment, false)
+        findNavController().popBackStack()
     }
-
 
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menu.clear()
@@ -213,7 +214,6 @@ class CheckListFragment : Fragment(), MenuProvider {
             "#FFFAEDCB", // Yellow pastel
             "#FFC6DEF1"  // Blue pastel
         )
-
 
         AlertDialog.Builder(requireContext()).apply {
             setTitle("Choose a color")

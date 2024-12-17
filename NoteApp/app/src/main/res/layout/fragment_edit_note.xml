@@ -36,7 +36,6 @@
             android:maxLines="1"
             android:fontFamily="@font/poppins"/>
 
-        <!-- TextView pentru data și ora sub titlu -->
         <TextView
             android:id="@+id/editNoteDateTime"
             android:layout_width="wrap_content"

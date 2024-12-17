@@ -18,19 +18,21 @@ import com.example.noteapp.viewmodel.NoteViewModel
 
 class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
 
-    private var addNoteBinding: FragmentAddNoteBinding? = null
-    private val binding get() = addNoteBinding!!
+    private var _binding: FragmentAddNoteBinding? = null
+    private val binding get() = _binding!!
 
     private lateinit var notesViewModel: NoteViewModel
     private lateinit var addNoteView: View
 
     private var selectedColorHex: String = "#FFFFFFFF"
 
+    private var folderId: Int = 1 // Default folderId
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        addNoteBinding = FragmentAddNoteBinding.inflate(inflater, container, false)
+        _binding = FragmentAddNoteBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -41,6 +43,10 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
 
         notesViewModel = (activity as MainActivity).noteViewModel
         addNoteView = view
+
+        arguments?.let {
+            folderId = it.getInt("folderId", 1)
+        }
     }
 
     private fun saveNote(view: View) {
@@ -53,16 +59,16 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
                 noteTitle = noteTitle,
                 noteDesc = noteDesc,
                 noteColor = selectedColorHex,
-                dateCreated = System.currentTimeMillis()
+                dateCreated = System.currentTimeMillis(),
+                folderId = folderId
             )
             notesViewModel.addNote(note)
             Toast.makeText(requireContext(), "Note Saved", Toast.LENGTH_SHORT).show()
-            view.findNavController().popBackStack(R.id.homeFragment, false)
+            view.findNavController().popBackStack()
         } else {
             Toast.makeText(requireContext(), "Please enter note title", Toast.LENGTH_SHORT).show()
         }
     }
-
 
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menu.clear()
@@ -95,22 +101,20 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
             "#FFC6DEF1"  // Blue pastel
         )
 
-
         AlertDialog.Builder(requireContext()).apply {
             setTitle("Choose a color")
             setItems(colors) { _, which ->
                 selectedColorHex = colorsHex[which]
                 binding.addNoteDesc.background = createColorBorderDrawable(requireContext(), selectedColorHex)
                 binding.addNoteTitle.background = createColorBorderDrawable(requireContext(), selectedColorHex)
-
             }
             create()
             show()
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        addNoteBinding = null
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

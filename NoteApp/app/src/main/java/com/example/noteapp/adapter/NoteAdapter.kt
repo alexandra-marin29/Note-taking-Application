@@ -1,44 +1,33 @@
 package com.example.noteapp.adapter
 
 import android.graphics.Color
-import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.navigation.findNavController
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.noteapp.databinding.NoteLayoutBinding
-import com.example.noteapp.fragments.HomeFragmentDirections
 import com.example.noteapp.model.Note
 import android.view.View
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.cardview.widget.CardView
-import androidx.core.os.bundleOf
-import com.example.noteapp.R
 import org.json.JSONArray
 import java.text.SimpleDateFormat
 import java.util.*
 
+class NoteAdapter(private val onEditNoteClick: (Note) -> Unit) : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
-class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
+    class NoteViewHolder(val itemBinding: NoteLayoutBinding) : RecyclerView.ViewHolder(itemBinding.root)
 
-    class NoteViewHolder(val itemBinding: NoteLayoutBinding): RecyclerView.ViewHolder(itemBinding.root)
-
-    private val differCallback = object : DiffUtil.ItemCallback<Note>()
-    {
+    private val differCallback = object : DiffUtil.ItemCallback<Note>() {
         override fun areItemsTheSame(oldItem: Note, newItem: Note): Boolean {
-            return oldItem.id == newItem.id &&
-                    oldItem.noteDesc == newItem.noteDesc &&
-                    oldItem.noteTitle == newItem.noteTitle
+            return oldItem.id == newItem.id
         }
 
         override fun areContentsTheSame(oldItem: Note, newItem: Note): Boolean {
             return oldItem == newItem
         }
-
     }
     val differ = AsyncListDiffer(this, differCallback)
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
@@ -102,7 +91,6 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
                     setBackgroundColor(parsedColor)
                 }
 
-
                 rowLayout.addView(checkBox)
                 rowLayout.addView(textView)
                 binding.checklistContainerPreview.addView(rowLayout)
@@ -117,13 +105,7 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
         binding.noteDateTime.text = dateString
 
         holder.itemView.setOnClickListener {
-            val bundle = Bundle().apply {
-                putParcelable("note", currentNote)
-            }
-            it.findNavController().navigate(R.id.editNoteFragment, bundle)
+            onEditNoteClick(currentNote)
         }
     }
-
-
-
 }
