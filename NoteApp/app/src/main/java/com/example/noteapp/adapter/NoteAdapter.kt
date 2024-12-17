@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.example.noteapp.R
 import com.example.noteapp.databinding.NoteLayoutBinding
 import com.example.noteapp.model.Note
 import android.view.View
@@ -103,6 +104,13 @@ class NoteAdapter(private val onEditNoteClick: (Note) -> Unit) : RecyclerView.Ad
         val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         val dateString = sdf.format(Date(currentNote.dateCreated))
         binding.noteDateTime.text = dateString
+
+        if (currentNote.isPinned) {
+            binding.pinIcon.visibility = View.VISIBLE
+            binding.pinIcon.setImageResource(R.drawable.baseline_push_pin_blue_24)
+        } else {
+            binding.pinIcon.visibility = View.GONE
+        }
 
         holder.itemView.setOnClickListener {
             onEditNoteClick(currentNote)

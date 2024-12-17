@@ -35,6 +35,8 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
     private var currentNote: Note? = null
     private var selectedColorHex: String = "#FFFFFFFF"
 
+    private var isPinned: Boolean = false
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -57,6 +59,7 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
         if (currentNote != null) {
             binding.editNoteTitle.setText(currentNote!!.noteTitle)
             selectedColorHex = currentNote!!.noteColor ?: "#FFFFFFFF"
+            isPinned = currentNote!!.isPinned
             applyColorToNoteContent(selectedColorHex)
 
             try {
@@ -142,6 +145,7 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                 obj.put("isChecked", checkBox.isChecked)
                 jsonArray.put(obj)
             }
+
             jsonArray.toString()
         } else {
             binding.editNoteDesc.text.toString().trim()
@@ -159,14 +163,16 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             noteTitle = noteTitle,
             noteDesc = noteDesc,
             noteColor = finalColor,
-            dateCreated = dateNow
+            dateCreated = dateNow,
+            isPinned = isPinned
         ) ?: Note(
             id = 0,
             noteTitle = noteTitle,
             noteDesc = noteDesc,
             noteColor = finalColor,
             dateCreated = dateNow,
-            folderId = 1
+            folderId = 1,
+            isPinned = isPinned
         )
 
         if (currentNote == null) {
@@ -188,12 +194,28 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menu.clear()
         menuInflater.inflate(R.menu.menu_edit_note, menu)
+
+        val pinMenuItem = menu.findItem(R.id.pinMenu)
+        if (isPinned) {
+            pinMenuItem.setIcon(R.drawable.baseline_push_pin_24)
+        } else {
+            pinMenuItem.setIcon(R.drawable.baseline_push_pin_outline_24)
+        }
     }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
         return when (menuItem.itemId) {
             R.id.deleteMenu -> {
                 deleteNote()
+                true
+            }
+            R.id.pinMenu -> {
+                isPinned = !isPinned
+                if (isPinned) {
+                    menuItem.setIcon(R.drawable.baseline_push_pin_24)
+                } else {
+                    menuItem.setIcon(R.drawable.baseline_push_pin_outline_24)
+                }
                 true
             }
             R.id.settingsMenu -> {

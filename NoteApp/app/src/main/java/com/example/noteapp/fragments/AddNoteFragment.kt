@@ -28,6 +28,8 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
 
     private var folderId: Int = 1 // Default folderId
 
+    private var isPinned: Boolean = false
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -60,7 +62,8 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
                 noteDesc = noteDesc,
                 noteColor = selectedColorHex,
                 dateCreated = System.currentTimeMillis(),
-                folderId = folderId
+                folderId = folderId,
+                isPinned = isPinned
             )
             notesViewModel.addNote(note)
             Toast.makeText(requireContext(), "Note Saved", Toast.LENGTH_SHORT).show()
@@ -73,12 +76,28 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menu.clear()
         menuInflater.inflate(R.menu.menu_add_note, menu)
+
+        val pinMenuItem = menu.findItem(R.id.pinMenu)
+        if (isPinned) {
+            pinMenuItem.setIcon(R.drawable.baseline_push_pin_24)
+        } else {
+            pinMenuItem.setIcon(R.drawable.baseline_push_pin_outline_24)
+        }
     }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
         return when (menuItem.itemId) {
             R.id.saveMenu -> {
                 saveNote(addNoteView)
+                true
+            }
+            R.id.pinMenu -> {
+                isPinned = !isPinned
+                if (isPinned) {
+                    menuItem.setIcon(R.drawable.baseline_push_pin_24)
+                } else {
+                    menuItem.setIcon(R.drawable.baseline_push_pin_outline_24)
+                }
                 true
             }
             R.id.settingsMenu -> {

@@ -11,34 +11,49 @@
         app:cardElevation="6dp"
         app:cardCornerRadius="10dp">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
+            android:layout_height="wrap_content"
             android:background="@drawable/gray_border"
             android:padding="16dp">
 
             <TextView
                 android:id="@+id/noteTitle"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:textColor="@color/black"
                 android:fontFamily="@font/poppins"
                 android:text="Note Title"
                 android:textStyle="bold"
-                android:textSize="20sp"/>
+                android:textSize="20sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/pinIcon"
+                app:layout_constraintHorizontal_bias="0" />
+
+            <ImageView
+                android:id="@+id/pinIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/baseline_push_pin_blue_24"
+                android:visibility="gone"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <LinearLayout
                 android:id="@+id/checklistContainerPreview"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:orientation="vertical"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/noteTitle"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <TextView
                 android:id="@+id/noteDesc"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:maxHeight="170dp"
@@ -47,18 +62,23 @@
                 android:maxLines="3"
                 android:ellipsize="end"
                 android:fontFamily="@font/poppins"
-                android:textColor="@color/dark_gray"/>
+                android:textColor="@color/dark_gray"
+                app:layout_constraintTop_toBottomOf="@id/noteTitle"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <TextView
                 android:id="@+id/noteDateTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:layout_gravity="end"
                 android:textColor="@color/dark_gray"
                 android:textSize="12sp"
                 android:fontFamily="@font/poppins"
-                android:text=""/>
-        </LinearLayout>
+                android:text=""
+                app:layout_constraintTop_toBottomOf="@id/noteDesc"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
 </layout>

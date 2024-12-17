@@ -52,4 +52,9 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
     fun getNotesSortedByTitle(folderId: Int) = noteRepository.getNotesSortedByTitle(folderId)
     fun getNotesSortedByDateDesc(folderId: Int) = noteRepository.getNotesSortedByDateDesc(folderId)
     fun getNotesSortedByDateAsc(folderId: Int) = noteRepository.getNotesSortedByDateAsc(folderId)
+
+    fun togglePinStatus(note: Note) = viewModelScope.launch {
+        val updatedNote = note.copy(isPinned = !note.isPinned)
+        noteRepository.updateNote(updatedNote)
+    }
 }
