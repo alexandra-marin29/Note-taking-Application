@@ -5,6 +5,7 @@ import android.view.*
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
@@ -87,9 +88,10 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
     private fun showNewFolderDialog() {
         val editText = EditText(requireContext()).apply {
             hint = "Folder name"
+            setPadding(12, 60, 12, 12)
         }
         AlertDialog.Builder(requireContext())
-            .setTitle("New Folder")
+            .setTitle("Create New Folder")
             .setView(editText)
             .setPositiveButton("OK") { dialog, _ ->
                 val folderName = editText.text.toString().trim()
@@ -102,8 +104,11 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
                 dialog.dismiss()
             }
             .setNegativeButton("Cancel", null)
-            .create().show()
+            .create()
+            .show()
     }
+
+
 
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menu.clear()
