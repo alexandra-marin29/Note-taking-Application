@@ -14,9 +14,9 @@
         tools:context=".fragments.CheckListFragment">
 
         <ScrollView
-            android:id="@+id/checkListScrollView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:fillViewport="true">
 
             <LinearLayout
                 android:id="@+id/checklistRootLayout"
@@ -43,8 +43,8 @@
                     android:maxLines="1"
                     android:padding="12dp"
                     android:textSize="20sp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/gray_border" />
+                    android:background="@drawable/gray_border"
+                    android:layout_marginTop="16dp" />
 
                 <TextView
                     android:id="@+id/checklistDateTime"
@@ -79,6 +79,7 @@
                     android:orientation="vertical"
                     android:visibility="gone"
                     android:layout_marginTop="8dp"/>
+
             </LinearLayout>
         </ScrollView>
     </androidx.cardview.widget.CardView>
