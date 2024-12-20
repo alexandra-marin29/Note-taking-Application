@@ -10,89 +10,96 @@
         android:padding="12dp"
         tools:context=".fragments.EditNoteFragment">
 
-        <TextView
-            android:id="@+id/editNoteHeading"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/poppins"
-            android:text="Edit Note"
-            android:textStyle="bold"
-            android:textColor="@color/black"
-            android:textSize="24sp"
-            android:layout_marginTop="16dp"
-            android:layout_centerHorizontal="true" />
-
-        <EditText
-            android:id="@+id/editNoteTitle"
+        <ScrollView
+            android:id="@+id/editNoteScrollView"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:hint="Enter the title"
-            android:padding="12dp"
-            android:textSize="20sp"
-            android:background="@drawable/gray_border"
-            android:layout_below="@id/editNoteHeading"
-            android:layout_marginTop="16dp"
-            android:maxLines="1"
-            android:fontFamily="@font/poppins"/>
-
-        <TextView
-            android:id="@+id/editNoteDateTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:textColor="@color/dark_gray"
-            android:fontFamily="@font/poppins"
-            android:text=""
-            android:layout_below="@id/editNoteTitle"
-            android:layout_marginTop="8dp"/>
-
-        <LinearLayout
-            android:id="@+id/wrapperLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_below="@id/editNoteDateTime"
-            android:layout_marginTop="12dp">
+            android:layout_height="match_parent"
+            android:layout_above="@id/editNoteFab">
 
             <LinearLayout
-                android:id="@+id/editChecklistContainer"
+                android:id="@+id/editNoteContentLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone"/>
+                android:orientation="vertical">
 
-            <EditText
-                android:id="@+id/editNoteDesc"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Enter the description"
-                android:gravity="top"
-                android:padding="12dp"
-                android:textSize="18sp"
-                android:fontFamily="@font/poppins"
-                android:background="@drawable/gray_border"
-                android:layout_marginTop="12dp"
-                android:visibility="visible" />
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/editNoteHeading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Edit Note"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    android:textSize="24sp"
+                    android:fontFamily="@font/poppins"
+                    android:layout_marginTop="16dp"/>
 
-        <LinearLayout
-            android:id="@+id/editImagesContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:visibility="gone"
-            android:layout_below="@id/wrapperLayout"
-            android:layout_marginTop="8dp"
-            android:gravity="center_horizontal"/>
+                <EditText
+                    android:id="@+id/editNoteTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:hint="Enter the title"
+                    android:padding="12dp"
+                    android:textSize="20sp"
+                    android:maxLines="1"
+                    android:fontFamily="@font/poppins"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/gray_border"/>
 
-        <LinearLayout
-            android:id="@+id/editUrlsContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone"
-            android:layout_below="@id/editImagesContainer"
-            android:layout_marginTop="8dp"/>
+                <TextView
+                    android:id="@+id/editNoteDateTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="12sp"
+                    android:textColor="@color/dark_gray"
+                    android:fontFamily="@font/poppins"
+                    android:layout_marginTop="8dp"/>
+
+                <LinearLayout
+                    android:id="@+id/wrapperLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="12dp">
+
+                    <LinearLayout
+                        android:id="@+id/editChecklistContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"/>
+
+                    <EditText
+                        android:id="@+id/editNoteDesc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter the description"
+                        android:gravity="top"
+                        android:padding="12dp"
+                        android:textSize="18sp"
+                        android:fontFamily="@font/poppins"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/gray_border"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/editImagesContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_horizontal"/>
+
+                <LinearLayout
+                    android:id="@+id/editUrlsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:layout_marginTop="8dp"/>
+            </LinearLayout>
+        </ScrollView>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/editNoteFab"
