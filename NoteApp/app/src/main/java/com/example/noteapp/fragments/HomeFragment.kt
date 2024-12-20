@@ -89,21 +89,18 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
             0 -> {
                 notesViewModel.getNotesSortedByTitle(folderId).observe(viewLifecycleOwner) { notes ->
                     noteAdapter.differ.submitList(notes)
-                    noteAdapter.notifyDataSetChanged()
                     updateUI(notes)
                 }
             }
             1 -> {
                 notesViewModel.getNotesSortedByDateDesc(folderId).observe(viewLifecycleOwner) { notes ->
                     noteAdapter.differ.submitList(notes)
-                    noteAdapter.notifyDataSetChanged()
                     updateUI(notes)
                 }
             }
             2 -> {
                 notesViewModel.getNotesSortedByDateAsc(folderId).observe(viewLifecycleOwner) { notes ->
                     noteAdapter.differ.submitList(notes)
-                    noteAdapter.notifyDataSetChanged()
                     updateUI(notes)
                 }
             }
@@ -123,12 +120,13 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
     }
 
     private fun setupHomeRecyclerView() {
-        noteAdapter = NoteAdapter { note ->
+        noteAdapter = NoteAdapter(onEditNoteClick = { note ->
             val bundle = Bundle().apply {
                 putParcelable("note", note)
             }
             findNavController().navigate(R.id.action_homeFragment_to_editNoteFragment, bundle)
-        }
+        }, isHomePage = true)
+
         binding.homeRecyclerView.apply {
             this.adapter = noteAdapter
             layoutManager = GridLayoutManager(context, 2)

@@ -3,6 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/addImageMenu"
+        android:icon="@drawable/baseline_image_24"
+        android:title="Add Image"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/addUrlMenu"
+        android:icon="@drawable/baseline_link_24"
+        android:title="Add URL"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/reminderMenu"
         android:icon="@drawable/baseline_time_outline_24"
         android:title="Set Reminder"

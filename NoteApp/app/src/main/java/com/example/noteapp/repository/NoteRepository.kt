@@ -14,7 +14,6 @@ class NoteRepository(private val db: NoteDatabase) {
     suspend fun insertFolder(folder: Folder) = db.getFolderDao().insertFolder(folder)
     suspend fun deleteFolder(folder: Folder) = db.getFolderDao().deleteFolder(folder)
 
-
     fun getFolderByIdLiveData(id: Int): LiveData<Folder?> = db.getFolderDao().getFolderByIdLiveData(id)
 
     suspend fun getFolderByName(name: String) = db.getFolderDao().getFolderByName(name)

@@ -29,5 +29,7 @@ data class Note(
     val dateCreated: Long,
     val folderId: Int,
     val isPinned: Boolean = false,
-    val reminderTime: Long? = null
+    val reminderTime: Long? = null,
+    val imageUris: String = "[]",
+    val urls: String = "[]"
 ) : Parcelable

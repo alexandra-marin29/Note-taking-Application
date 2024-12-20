@@ -59,7 +59,7 @@
         <EditText
             android:id="@+id/editNoteDesc"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:hint="Enter the description"
             android:gravity="top"
             android:padding="12dp"
@@ -68,6 +68,25 @@
             android:background="@drawable/gray_border"
             android:layout_below="@id/editNoteDateTime"
             android:layout_marginTop="12dp" />
+
+        <LinearLayout
+            android:id="@+id/editImagesContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:layout_below="@id/editNoteDesc"
+            android:layout_marginTop="8dp"
+            android:gravity="center_horizontal"/>
+
+        <LinearLayout
+            android:id="@+id/editUrlsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_below="@id/editImagesContainer"
+            android:layout_marginTop="8dp"/>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/editNoteFab"
@@ -82,6 +101,5 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"
             android:contentDescription="editFab" />
-
     </RelativeLayout>
 </layout>

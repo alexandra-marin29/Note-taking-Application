@@ -1,18 +1,29 @@
 package com.example.noteapp.fragments
 
+import android.Manifest
 import android.app.AlarmManager
 import android.app.DatePickerDialog
 import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.text.InputType
+import android.util.Patterns
 import android.view.*
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
@@ -25,8 +36,11 @@ import com.example.noteapp.model.Note
 import com.example.noteapp.receiver.ReminderReceiver
 import com.example.noteapp.util.createColorBorderDrawable
 import com.example.noteapp.viewmodel.NoteViewModel
+import com.squareup.picasso.Picasso
+import org.json.JSONArray
+import java.io.File
+import java.io.FileOutputStream
 import java.util.Calendar
-
 class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
 
     private var _binding: FragmentAddNoteBinding? = null
@@ -42,6 +56,25 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
     private var isPinned: Boolean = false
 
     private var reminderTime: Long? = null
+
+    private val imageUriList = mutableListOf<String>()
+    private val urlList = mutableListOf<String>()
+
+    // Request code for READ_MEDIA_IMAGES
+    private val requestReadMediaImagesPermission = 1002
+
+    // Launcher for picking images
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            val copiedUri = copyImageToInternalStorage(it)
+            if (copiedUri != null) {
+                imageUriList.add(copiedUri.toString())
+                addImageToContainer(copiedUri)
+                Toast.makeText(requireContext(), "Image added", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -69,6 +102,9 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
         val noteDesc = binding.addNoteDesc.text.toString().trim()
 
         if (noteTitle.isNotEmpty()) {
+            val imageUrisJson = JSONArray(imageUriList).toString()
+            val urlsJson = JSONArray(urlList).toString()
+
             val note = Note(
                 id = 0,
                 noteTitle = noteTitle,
@@ -77,7 +113,9 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
                 dateCreated = System.currentTimeMillis(),
                 folderId = folderId,
                 isPinned = isPinned,
-                reminderTime = reminderTime
+                reminderTime = reminderTime,
+                imageUris = imageUrisJson,
+                urls = urlsJson
 
             )
             notesViewModel.addNote(note) { newId ->
@@ -181,7 +219,221 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
                 showColorPickerDialog()
                 true
             }
+            R.id.addImageMenu -> {
+                checkAndRequestReadMediaImagesPermission()
+                return true
+            }
+            R.id.addUrlMenu -> {
+                showAddUrlDialog()
+                return true
+            }
             else -> false
+        }
+    }
+
+    private fun checkAndRequestReadMediaImagesPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.READ_MEDIA_IMAGES
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.READ_MEDIA_IMAGES)) {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Permission Required")
+                        .setMessage("The app needs permission to access your images to add them to your notes.")
+                        .setPositiveButton("Grant") { _, _ ->
+                            requestPermissions(
+                                arrayOf(Manifest.permission.READ_MEDIA_IMAGES),
+                                requestReadMediaImagesPermission
+                            )
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .create()
+                        .show()
+                } else {
+                    requestPermissions(
+                        arrayOf(Manifest.permission.READ_MEDIA_IMAGES),
+                        requestReadMediaImagesPermission
+                    )
+                }
+            } else {
+                openImagePicker()
+            }
+        } else { // Android versions below 13
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Permission Required")
+                        .setMessage("The app needs permission to access your images to add them to your notes.")
+                        .setPositiveButton("Grant") { _, _ ->
+                            requestPermissions(
+                                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                                requestReadMediaImagesPermission
+                            )
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .create()
+                        .show()
+                } else {
+                    requestPermissions(
+                        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                        requestReadMediaImagesPermission
+                    )
+                }
+            } else {
+                openImagePicker()
+            }
+        }
+    }
+
+    private fun openImagePicker() {
+        pickImageLauncher.launch("image/*")
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == requestReadMediaImagesPermission) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openImagePicker()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Permission denied to read images.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private fun showAddUrlDialog() {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Add URL")
+
+        val input = EditText(requireContext())
+        input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+        input.hint = "https://example.com"
+        builder.setView(input)
+
+        builder.setPositiveButton("Add") { dialog, _ ->
+            val url = input.text.toString().trim()
+            if (url.isNotEmpty()) {
+                if (Patterns.WEB_URL.matcher(url).matches()) {
+                    urlList.add(url)
+                    addUrlToContainer(url)
+                    Toast.makeText(requireContext(), "URL added", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(requireContext(), "Invalid URL", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(requireContext(), "URL cannot be empty", Toast.LENGTH_SHORT).show()
+            }
+            dialog.dismiss()
+        }
+        builder.setNegativeButton("Cancel") { dialog, _ ->
+            dialog.cancel()
+        }
+
+        builder.show()
+    }
+
+
+    private fun addUrlToContainer(url: String) {
+        binding.addUrlsContainer.visibility = View.VISIBLE
+        val urlTextView = TextView(requireContext()).apply {
+            text = url
+            setTextColor(Color.BLUE)
+            textSize = 18f // Text size mai mare
+            setPadding(8, 8, 8, 8)
+            setOnClickListener {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                startActivity(intent)
+            }
+        }
+
+        urlTextView.setOnLongClickListener {
+            AlertDialog.Builder(requireContext()).apply {
+                setTitle("Delete URL")
+                setMessage("Are you sure you want to delete this URL?")
+                setPositiveButton("Delete") { _, _ ->
+                    binding.addUrlsContainer.removeView(urlTextView)
+                    urlList.remove(url)
+                    Toast.makeText(requireContext(), "URL deleted", Toast.LENGTH_SHORT).show()
+                }
+                setNegativeButton("Cancel", null)
+                create()
+                show()
+            }
+            true
+        }
+
+        binding.addUrlsContainer.addView(urlTextView)
+    }
+
+    private fun addImageToContainer(uri: Uri) {
+        binding.addImagesContainer.visibility = View.VISIBLE
+
+        val imageView = ImageView(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(500, 500).apply {
+                setMargins(8, 8, 8, 8)
+            }
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            setImageResource(R.drawable.placeholder_image)
+            Picasso.get()
+                .load(uri)
+                .placeholder(R.drawable.placeholder_image)
+                .error(R.drawable.placeholder_image)
+                .resize(500, 500)
+                .centerCrop()
+                .into(this)
+            tag = uri.toString()
+        }
+
+        imageView.setOnLongClickListener {
+            AlertDialog.Builder(requireContext()).apply {
+                setTitle("Delete Image")
+                setMessage("Are you sure you want to delete this image?")
+                setPositiveButton("Delete") { _, _ ->
+                    binding.addImagesContainer.removeView(imageView)
+                    imageUriList.remove(uri.toString())
+                    val file = File(Uri.parse(uri.toString()).path!!)
+                    if (file.exists()) {
+                        file.delete()
+                    }
+                    Toast.makeText(requireContext(), "Image deleted", Toast.LENGTH_SHORT).show()
+                }
+                setNegativeButton("Cancel", null)
+                create()
+                show()
+            }
+            true
+        }
+
+        binding.addImagesContainer.addView(imageView)
+    }
+
+    private fun copyImageToInternalStorage(uri: Uri): Uri? {
+        return try {
+            val inputStream = requireContext().contentResolver.openInputStream(uri) ?: return null
+            val fileName = "IMG_${System.currentTimeMillis()}.jpg"
+            val file = File(requireContext().filesDir, fileName)
+            val outputStream = FileOutputStream(file)
+            inputStream.copyTo(outputStream)
+            inputStream.close()
+            outputStream.close()
+            Uri.fromFile(file)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(requireContext(), "Failed to save image", Toast.LENGTH_SHORT).show()
+            null
         }
     }
 
