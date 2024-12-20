@@ -70,6 +70,7 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                 imageUriList.add(copiedUri.toString())
                 addImageToContainer(copiedUri)
                 Toast.makeText(requireContext(), "Image added", Toast.LENGTH_SHORT).show()
+
             }
         }
     }
@@ -131,6 +132,8 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                 binding.editChecklistContainer.visibility = View.GONE
                 binding.editNoteDesc.setText(note.noteDesc)
             }
+            binding.editImagesContainer.requestLayout()
+
             val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
             val dateString = sdf.format(Date(note.dateCreated))
             binding.editNoteDateTime.text = dateString

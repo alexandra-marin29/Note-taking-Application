@@ -203,8 +203,8 @@ class CheckListFragment : Fragment(R.layout.fragment_check_list), MenuProvider {
         val urlTextView = TextView(requireContext()).apply {
             text = url
             setTextColor(Color.BLUE)
-            textSize = 14f
-            setPadding(4, 4, 4, 4)
+            textSize = 18f
+            setPadding(8, 8, 8, 8)
             setOnClickListener {
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                 startActivity(intent)
