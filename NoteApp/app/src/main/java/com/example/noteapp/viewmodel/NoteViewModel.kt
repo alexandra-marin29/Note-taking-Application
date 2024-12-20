@@ -20,9 +20,10 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
         }
     }
 
-    fun addNote(note: Note) =
+    fun addNote(note: Note, callback: (Long) -> Unit) =
         viewModelScope.launch {
-            noteRepository.insertNote(note)
+            val newId = noteRepository.insertNote(note)
+            callback(newId)
         }
 
     fun deleteNote(note: Note) =

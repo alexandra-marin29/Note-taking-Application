@@ -3,6 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/reminderMenu"
+        android:icon="@drawable/baseline_time_outline_24"
+        android:title="Set Reminder"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/pinMenu"
         android:icon="@drawable/baseline_push_pin_outline_24"
         android:title="Pin"

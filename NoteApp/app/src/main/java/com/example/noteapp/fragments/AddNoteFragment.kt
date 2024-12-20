@@ -1,6 +1,15 @@
 package com.example.noteapp.fragments
 
+import android.app.AlarmManager
+import android.app.DatePickerDialog
+import android.app.PendingIntent
+import android.app.TimePickerDialog
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -13,8 +22,10 @@ import com.example.noteapp.MainActivity
 import com.example.noteapp.R
 import com.example.noteapp.databinding.FragmentAddNoteBinding
 import com.example.noteapp.model.Note
+import com.example.noteapp.receiver.ReminderReceiver
 import com.example.noteapp.util.createColorBorderDrawable
 import com.example.noteapp.viewmodel.NoteViewModel
+import java.util.Calendar
 
 class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
 
@@ -29,6 +40,8 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
     private var folderId: Int = 1 // Default folderId
 
     private var isPinned: Boolean = false
+
+    private var reminderTime: Long? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -63,13 +76,66 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
                 noteColor = selectedColorHex,
                 dateCreated = System.currentTimeMillis(),
                 folderId = folderId,
-                isPinned = isPinned
+                isPinned = isPinned,
+                reminderTime = reminderTime
+
             )
-            notesViewModel.addNote(note)
-            Toast.makeText(requireContext(), "Note Saved", Toast.LENGTH_SHORT).show()
-            view.findNavController().popBackStack()
+            notesViewModel.addNote(note) { newId ->
+                if (reminderTime != null) {
+                    val noteWithId = note.copy(id = newId.toInt())
+                    scheduleReminder(noteWithId)
+                }
+                Toast.makeText(requireContext(), "Note Saved", Toast.LENGTH_SHORT).show()
+                view.findNavController().popBackStack()
+            }
         } else {
             Toast.makeText(requireContext(), "Please enter note title", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun scheduleReminder(note: Note) {
+        val reminderTimeInMillis = note.reminderTime ?: return
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12+
+            val alarmManager = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) {
+                AlertDialog.Builder(requireContext()).apply {
+                    setTitle("Exact Alarm Permission Required")
+                    setMessage("The app requires permission to set exact alarms for reminders. Please grant it in the app settings.")
+                    setPositiveButton("Open Settings") { _, _ ->
+                        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                            data = Uri.parse("package:${requireContext().packageName}")
+                        }
+                        startActivity(intent)
+                    }
+                    setNegativeButton("Cancel", null)
+                    create()
+                    show()
+                }
+                return
+            }
+        }
+
+        try {
+            val intent = Intent(requireContext(), ReminderReceiver::class.java).apply {
+                putExtra("noteId", note.id)
+                putExtra("noteTitle", note.noteTitle)
+                putExtra("noteDesc", note.noteDesc)
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                requireContext(),
+                note.id,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val alarmManager = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, reminderTimeInMillis, pendingIntent)
+
+            Toast.makeText(requireContext(), "Reminder set successfully", Toast.LENGTH_SHORT).show()
+        } catch (e: SecurityException) {
+            Toast.makeText(requireContext(), "Permission for exact alarms is not granted.", Toast.LENGTH_LONG).show()
+            e.printStackTrace()
         }
     }
 
@@ -82,6 +148,13 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
             pinMenuItem.setIcon(R.drawable.baseline_push_pin_24)
         } else {
             pinMenuItem.setIcon(R.drawable.baseline_push_pin_outline_24)
+        }
+
+        val reminderMenuItem = menu.findItem(R.id.reminderMenu)
+        if (reminderTime != null) {
+            reminderMenuItem.setIcon(R.drawable.baseline_time_filled_24)
+        } else {
+            reminderMenuItem.setIcon(R.drawable.baseline_time_outline_24)
         }
     }
 
@@ -100,6 +173,10 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
                 }
                 true
             }
+            R.id.reminderMenu -> {
+                openDateTimePicker(menuItem)
+                true
+            }
             R.id.settingsMenu -> {
                 showColorPickerDialog()
                 true
@@ -107,6 +184,36 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
             else -> false
         }
     }
+
+    private fun openDateTimePicker(menuItem: MenuItem) {
+        val calendar = Calendar.getInstance()
+        val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
+            calendar.set(Calendar.YEAR, year)
+            calendar.set(Calendar.MONTH, month)
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+
+            val timeSetListener = TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
+                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                calendar.set(Calendar.MINUTE, minute)
+                calendar.set(Calendar.SECOND, 0)
+
+                reminderTime = calendar.timeInMillis
+                menuItem.setIcon(R.drawable.baseline_time_filled_24)
+            }
+
+            TimePickerDialog(
+                requireContext(), timeSetListener,
+                calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true
+            ).show()
+        }
+
+        DatePickerDialog(
+            requireContext(), dateSetListener,
+            calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
+
 
     private fun showColorPickerDialog() {
         val colors = arrayOf("White", "Pink", "Green", "Purple", "Orange", "Yellow", "Blue")

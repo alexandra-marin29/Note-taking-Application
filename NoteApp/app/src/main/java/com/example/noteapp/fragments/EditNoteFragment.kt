@@ -1,8 +1,14 @@
 package com.example.noteapp.fragments
 
+import android.app.*
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.text.InputType
 import android.view.*
 import android.view.inputmethod.InputMethodManager
@@ -11,6 +17,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
@@ -20,11 +27,13 @@ import com.example.noteapp.MainActivity
 import com.example.noteapp.R
 import com.example.noteapp.databinding.FragmentEditNoteBinding
 import com.example.noteapp.model.Note
+import com.example.noteapp.receiver.ReminderReceiver
 import com.example.noteapp.util.createColorBorderDrawable
 import com.example.noteapp.viewmodel.NoteViewModel
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.util.*
 
 class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
@@ -36,6 +45,8 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
     private var selectedColorHex: String = "#FFFFFFFF"
 
     private var isPinned: Boolean = false
+
+    private var reminderTime: Long? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -56,21 +67,22 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             currentNote = it.getParcelable("note")
         }
 
-        if (currentNote != null) {
-            binding.editNoteTitle.setText(currentNote!!.noteTitle)
-            selectedColorHex = currentNote!!.noteColor ?: "#FFFFFFFF"
-            isPinned = currentNote!!.isPinned
+        currentNote?.let { note ->
+            binding.editNoteTitle.setText(note.noteTitle)
+            selectedColorHex = note.noteColor ?: "#FFFFFFFF"
+            isPinned = note.isPinned
+            reminderTime = note.reminderTime
             applyColorToNoteContent(selectedColorHex)
 
             try {
-                val jsonArray = JSONArray(currentNote!!.noteDesc)
+                val jsonArray = JSONArray(note.noteDesc)
                 binding.editNoteDesc.visibility = View.GONE
                 binding.editChecklistContainer.visibility = View.VISIBLE
                 loadChecklistFromJson(jsonArray)
             } catch (e: JSONException) {
                 binding.editNoteDesc.visibility = View.VISIBLE
                 binding.editChecklistContainer.visibility = View.GONE
-                binding.editNoteDesc.setText(currentNote!!.noteDesc)
+                binding.editNoteDesc.setText(note.noteDesc)
             }
         }
 
@@ -78,7 +90,6 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             saveUpdatedNote()
         }
     }
-
 
     private fun loadChecklistFromJson(jsonArray: JSONArray) {
         binding.editChecklistContainer.removeAllViews()
@@ -133,7 +144,7 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
     private fun saveUpdatedNote() {
         val noteTitle = binding.editNoteTitle.text.toString().trim()
-        val noteDesc = if (binding.editChecklistContainer.visibility == View.VISIBLE) {
+        val noteDesc = if (checkListContainerIsVisible()) {
             val jsonArray = JSONArray()
             for (i in 0 until binding.editChecklistContainer.childCount) {
                 val row = binding.editChecklistContainer.getChildAt(i) as LinearLayout
@@ -145,7 +156,6 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                 obj.put("isChecked", checkBox.isChecked)
                 jsonArray.put(obj)
             }
-
             jsonArray.toString()
         } else {
             binding.editNoteDesc.text.toString().trim()
@@ -164,7 +174,8 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             noteDesc = noteDesc,
             noteColor = finalColor,
             dateCreated = dateNow,
-            isPinned = isPinned
+            isPinned = isPinned,
+            reminderTime = reminderTime
         ) ?: Note(
             id = 0,
             noteTitle = noteTitle,
@@ -172,23 +183,123 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             noteColor = finalColor,
             dateCreated = dateNow,
             folderId = 1,
-            isPinned = isPinned
+            isPinned = isPinned,
+            reminderTime = reminderTime
         )
 
         if (currentNote == null) {
-            notesViewModel.addNote(updatedNote)
-            Toast.makeText(requireContext(), "Checklist Note Saved", Toast.LENGTH_SHORT).show()
+            notesViewModel.addNote(updatedNote) { newId ->
+                if (reminderTime != null) {
+                    val noteWithId = updatedNote.copy(id = newId.toInt())
+                    scheduleReminder(noteWithId)
+                }
+                Toast.makeText(requireContext(), "Checklist Note Saved", Toast.LENGTH_SHORT).show()
+                findNavController().popBackStack()
+            }
         } else {
             notesViewModel.updateNote(updatedNote)
+            if (reminderTime != null) {
+                scheduleReminder(updatedNote)
+            } else {
+                cancelReminder(updatedNote)
+            }
             Toast.makeText(requireContext(), "Note Updated", Toast.LENGTH_SHORT).show()
+            findNavController().popBackStack()
+        }
+    }
+
+    private fun scheduleReminder(note: Note) {
+        val reminderTimeInMillis = note.reminderTime ?: return
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12+
+            val alarmManager = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) {
+                AlertDialog.Builder(requireContext()).apply {
+                    setTitle("Exact Alarm Permission Required")
+                    setMessage("The app requires permission to set exact alarms for reminders. Please grant it in the app settings.")
+                    setPositiveButton("Open Settings") { _, _ ->
+                        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                            data = Uri.parse("package:${requireContext().packageName}")
+                        }
+                        startActivity(intent)
+                    }
+                    setNegativeButton("Cancel", null)
+                    create()
+                    show()
+                }
+                return
+            }
         }
 
-        findNavController().popBackStack()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
+            if (ActivityCompat.checkSelfPermission(
+                    requireContext(),
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                Toast.makeText(
+                    requireContext(),
+                    "Permission for notifications is not granted.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return
+            }
+        }
+
+        try {
+            val intent = Intent(requireContext(), ReminderReceiver::class.java).apply {
+                putExtra("noteId", note.id)
+                putExtra("noteTitle", note.noteTitle)
+                putExtra("noteDesc", note.noteDesc)
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                requireContext(),
+                note.id,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val alarmManager = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, reminderTimeInMillis, pendingIntent)
+
+            Toast.makeText(requireContext(), "Reminder set successfully", Toast.LENGTH_SHORT).show()
+        } catch (e: SecurityException) {
+            Toast.makeText(
+                requireContext(),
+                "Permission for exact alarms is not granted.",
+                Toast.LENGTH_LONG
+            ).show()
+            e.printStackTrace()
+        }
     }
 
 
-    private fun checkListContainerIsVisible(): Boolean {
-        return binding.editChecklistContainer.visibility == View.VISIBLE
+    private fun cancelReminder(note: Note) {
+        val intent = Intent(requireContext(), ReminderReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            requireContext(),
+            note.id,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val alarmManager = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.cancel(pendingIntent)
+    }
+
+    private fun deleteNote() {
+        AlertDialog.Builder(requireContext()).apply {
+            setTitle("Delete Note")
+            setMessage("Do you want to delete this note?")
+            setPositiveButton("Delete") { _, _ ->
+                currentNote?.let {
+                    notesViewModel.deleteNote(it)
+                    cancelReminder(it)
+                }
+                Toast.makeText(context, "Note Deleted", Toast.LENGTH_SHORT).show()
+                findNavController().popBackStack()
+            }
+            setNegativeButton("Cancel", null)
+        }.create().show()
     }
 
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
@@ -200,6 +311,13 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             pinMenuItem.setIcon(R.drawable.baseline_push_pin_24)
         } else {
             pinMenuItem.setIcon(R.drawable.baseline_push_pin_outline_24)
+        }
+
+        val reminderMenuItem = menu.findItem(R.id.reminderMenu)
+        if (reminderTime != null) {
+            reminderMenuItem.setIcon(R.drawable.baseline_time_filled_24)
+        } else {
+            reminderMenuItem.setIcon(R.drawable.baseline_time_outline_24)
         }
     }
 
@@ -218,6 +336,10 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                 }
                 true
             }
+            R.id.reminderMenu -> {
+                openDateTimePicker(menuItem)
+                true
+            }
             R.id.settingsMenu -> {
                 showColorPickerDialog()
                 true
@@ -226,17 +348,33 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
         }
     }
 
-    private fun deleteNote() {
-        AlertDialog.Builder(requireContext()).apply {
-            setTitle("Delete Note")
-            setMessage("Do you want to delete this note?")
-            setPositiveButton("Delete") { _, _ ->
-                currentNote?.let { notesViewModel.deleteNote(it) }
-                Toast.makeText(context, "Note Deleted", Toast.LENGTH_SHORT).show()
-                findNavController().popBackStack()
+    private fun openDateTimePicker(menuItem: MenuItem) {
+        val calendar = Calendar.getInstance()
+        val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
+            calendar.set(Calendar.YEAR, year)
+            calendar.set(Calendar.MONTH, month)
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+
+            val timeSetListener = TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
+                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                calendar.set(Calendar.MINUTE, minute)
+                calendar.set(Calendar.SECOND, 0)
+
+                reminderTime = calendar.timeInMillis
+                menuItem.setIcon(R.drawable.baseline_time_filled_24)
             }
-            setNegativeButton("Cancel", null)
-        }.create().show()
+
+            TimePickerDialog(
+                requireContext(), timeSetListener,
+                calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true
+            ).show()
+        }
+
+        DatePickerDialog(
+            requireContext(), dateSetListener,
+            calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
 
     private fun showColorPickerDialog() {
@@ -271,6 +409,9 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
         binding.editChecklistContainer.background = drawable
     }
 
+    private fun checkListContainerIsVisible(): Boolean {
+        return binding.editChecklistContainer.visibility == View.VISIBLE
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()

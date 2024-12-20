@@ -28,5 +28,6 @@ data class Note(
     val noteColor: String = "#FFFFFFFF",
     val dateCreated: Long,
     val folderId: Int,
-    val isPinned: Boolean = false
+    val isPinned: Boolean = false,
+    val reminderTime: Long? = null
 ) : Parcelable
