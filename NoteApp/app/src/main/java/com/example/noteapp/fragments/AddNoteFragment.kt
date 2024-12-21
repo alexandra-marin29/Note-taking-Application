@@ -351,7 +351,7 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
         val urlTextView = TextView(requireContext()).apply {
             text = url
             setTextColor(Color.BLUE)
-            textSize = 18f // Text size mai mare
+            textSize = 18f
             setPadding(8, 8, 8, 8)
             setOnClickListener {
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
