@@ -23,4 +23,6 @@ class NoteRepository(private val db: NoteDatabase) {
     fun getNotesSortedByTitle(folderId: Int) = db.getNoteDao().getNotesSortedByTitle(folderId)
     fun getNotesSortedByDateDesc(folderId: Int) = db.getNoteDao().getNotesSortedByDateDesc(folderId)
     fun getNotesSortedByDateAsc(folderId: Int) = db.getNoteDao().getNotesSortedByDateAsc(folderId)
+    suspend fun getNotesListByFolderId(folderId: Int): List<Note> = db.getNoteDao().getNotesListByFolderId(folderId)
+
 }

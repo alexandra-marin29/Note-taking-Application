@@ -29,4 +29,7 @@ interface NoteDao {
 
     @Query("SELECT * FROM notes WHERE folderId = :folderId ORDER BY isPinned DESC, dateCreated ASC")
     fun getNotesSortedByDateAsc(folderId: Int): LiveData<List<Note>>
+
+    @Query("SELECT * FROM notes WHERE folderId = :folderId")
+    suspend fun getNotesListByFolderId(folderId: Int): List<Note>
 }
