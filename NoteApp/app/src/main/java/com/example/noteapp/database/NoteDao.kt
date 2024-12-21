@@ -7,7 +7,7 @@ import com.example.noteapp.model.Note
 @Dao
 interface NoteDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertNote(note: Note)
+    suspend fun insertNote(note: Note): Long
 
     @Update
     suspend fun updateNote(note: Note)
@@ -29,4 +29,18 @@ interface NoteDao {
 
     @Query("SELECT * FROM notes WHERE folderId = :folderId ORDER BY isPinned DESC, dateCreated ASC")
     fun getNotesSortedByDateAsc(folderId: Int): LiveData<List<Note>>
+
+    @Query("SELECT * FROM notes WHERE folderId = :folderId")
+    suspend fun getNotesListByFolderId(folderId: Int): List<Note>
+
+    @Query("SELECT * FROM notes WHERE id = :noteId LIMIT 1")
+    suspend fun getNoteById(noteId: Int): Note?
+
+    @Query("SELECT * FROM notes WHERE id = :noteId LIMIT 1")
+    fun getNoteByIdLiveData(noteId: Int): LiveData<Note?>
+
+    @Query("DELETE FROM notes WHERE folderId = :folderId")
+    suspend fun deleteNotesByFolder(folderId: Int)
+
+
 }

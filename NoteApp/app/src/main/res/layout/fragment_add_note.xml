@@ -6,45 +6,85 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:padding="12dp"
         tools:context=".fragments.AddNoteFragment">
 
-        <TextView
-            android:id="@+id/addNoteHeading"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Add Note"
-            android:textStyle="bold"
-            android:textColor="@color/black"
-            android:textSize="24sp"
-            android:fontFamily="@font/poppins"
-            android:layout_marginTop="16dp"/>
-
-        <EditText
-            android:id="@+id/addNoteTitle"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:hint="Enter the title"
-            android:padding="12dp"
-            android:textSize="20sp"
-            android:maxLines="1"
-            android:fontFamily="@font/poppins"
-            android:layout_below="@id/addNoteHeading"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/gray_border"/>
-
-        <EditText
-            android:id="@+id/addNoteDesc"
+        <ScrollView
+            android:id="@+id/addNoteScrollView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:hint="Enter the description"
-            android:gravity="top"
-            android:padding="12dp"
-            android:textSize="18sp"
-            android:fontFamily="@font/poppins"
-            android:layout_below="@id/addNoteTitle"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/gray_border"/>
+            android:layout_above="@id/addUrlsContainer"
+            tools:ignore="NotSibling">
+
+            <LinearLayout
+                android:id="@+id/addNoteContentLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/addNoteHeading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Add Note"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    android:textSize="24sp"
+                    android:fontFamily="@font/poppins"
+                    android:layout_marginTop="16dp"/>
+
+                <EditText
+                    android:id="@+id/addNoteTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:hint="Enter the title"
+                    android:padding="12dp"
+                    android:textSize="20sp"
+                    android:maxLines="1"
+                    android:fontFamily="@font/poppins"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/gray_border"/>
+
+                <TextView
+                    android:id="@+id/addNoteDateTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="12sp"
+                    android:textColor="@color/dark_gray"
+                    android:fontFamily="@font/poppins"
+                    android:layout_marginTop="8dp"/>
+
+                <EditText
+                    android:id="@+id/addNoteDesc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Enter the description"
+                    android:gravity="top"
+                    android:padding="12dp"
+                    android:textSize="18sp"
+                    android:fontFamily="@font/poppins"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/gray_border"/>
+
+                <LinearLayout
+                    android:id="@+id/addImagesContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_horizontal"/>
+
+                <LinearLayout
+                    android:id="@+id/addUrlsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:layout_marginTop="8dp"/>
+            </LinearLayout>
+        </ScrollView>
+
     </RelativeLayout>
 </layout>

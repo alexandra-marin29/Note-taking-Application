@@ -38,6 +38,8 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
         super.onViewCreated(view, savedInstanceState)
         notesViewModel = (activity as MainActivity).noteViewModel
 
+        requireActivity().title = "NoteApp"
+
         val menuHost: MenuHost = requireActivity()
         menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
