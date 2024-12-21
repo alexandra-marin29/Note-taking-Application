@@ -75,6 +75,8 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
         }
     }
 
+    private var reminderMenuItem: MenuItem? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
@@ -137,10 +139,27 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
             val dateString = sdf.format(Date(note.dateCreated))
             binding.editNoteDateTime.text = dateString
+
+            notesViewModel.getNoteByIdLiveData(note.id).observe(viewLifecycleOwner) { updatedNote ->
+                if (updatedNote != null) {
+                    reminderTime = updatedNote.reminderTime
+                    updateReminderMenuIcon()
+                }
+            }
         }
 
         binding.editNoteFab.setOnClickListener {
             saveUpdatedNote()
+        }
+    }
+
+    private fun updateReminderMenuIcon() {
+        if (reminderMenuItem != null) {
+            if (reminderTime != null) {
+                reminderMenuItem?.setIcon(R.drawable.baseline_time_filled_24)
+            } else {
+                reminderMenuItem?.setIcon(R.drawable.baseline_time_outline_24)
+            }
         }
     }
 

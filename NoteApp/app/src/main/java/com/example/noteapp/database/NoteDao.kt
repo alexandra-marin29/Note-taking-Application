@@ -32,4 +32,10 @@ interface NoteDao {
 
     @Query("SELECT * FROM notes WHERE folderId = :folderId")
     suspend fun getNotesListByFolderId(folderId: Int): List<Note>
+
+    @Query("SELECT * FROM notes WHERE id = :noteId LIMIT 1")
+    suspend fun getNoteById(noteId: Int): Note?
+
+    @Query("SELECT * FROM notes WHERE id = :noteId LIMIT 1")
+    fun getNoteByIdLiveData(noteId: Int): LiveData<Note?>
 }

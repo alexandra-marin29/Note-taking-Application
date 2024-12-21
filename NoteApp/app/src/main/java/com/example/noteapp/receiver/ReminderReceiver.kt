@@ -9,6 +9,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.noteapp.R
+import com.example.noteapp.database.NoteDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ReminderReceiver : BroadcastReceiver() {
 
@@ -38,6 +42,17 @@ class ReminderReceiver : BroadcastReceiver() {
 
             val notificationManager = NotificationManagerCompat.from(context)
             notificationManager.notify(noteId, notification)
+
+            val db = NoteDatabase.invoke(context)
+            CoroutineScope(Dispatchers.IO).launch {
+                val noteDao = db.getNoteDao()
+                val note = noteDao.getNoteById(noteId)
+                if (note != null && note.reminderTime != null) {
+                    val updatedNote = note.copy(reminderTime = null)
+                    noteDao.updateNote(updatedNote)
+                }
+            }
+
         } catch (e: SecurityException) {
             e.printStackTrace()
         } catch (e: Exception) {

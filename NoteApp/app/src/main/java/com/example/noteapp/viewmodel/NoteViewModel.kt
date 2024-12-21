@@ -1,16 +1,11 @@
 package com.example.noteapp.viewmodel
 
-import android.app.AlarmManager
 import android.app.Application
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.example.noteapp.model.Folder
 import com.example.noteapp.model.Note
-import com.example.noteapp.receiver.ReminderReceiver
 import com.example.noteapp.repository.NoteRepository
 import kotlinx.coroutines.launch
 
@@ -25,25 +20,6 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
         }
     }
 
-    private fun cancelReminder(note: Note) {
-        val context = getApplication<Application>().applicationContext
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-        val intent = Intent(context, ReminderReceiver::class.java).apply {
-            putExtra("noteId", note.id)
-        }
-
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            note.id,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        alarmManager.cancel(pendingIntent)
-        pendingIntent.cancel()
-    }
-
 
     fun addNote(note: Note, callback: (Long) -> Unit) =
         viewModelScope.launch {
@@ -51,13 +27,10 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
             callback(newId)
         }
 
-    fun deleteNote(note: Note) = viewModelScope.launch {
-        if (note.reminderTime != null) {
-            cancelReminder(note)
+    fun deleteNote(note: Note) =
+        viewModelScope.launch {
+            noteRepository.deleteNote(note)
         }
-        noteRepository.deleteNote(note)
-    }
-
 
     fun updateNote(note: Note) =
         viewModelScope.launch {
@@ -70,15 +43,8 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
         noteRepository.insertFolder(Folder(id = 0, folderName = folderName))
     }
     fun deleteFolder(folder: Folder) = viewModelScope.launch {
-        val notes = noteRepository.getNotesListByFolderId(folder.id)
-        notes.forEach { note ->
-            if (note.reminderTime != null) {
-                cancelReminder(note)
-            }
-        }
         noteRepository.deleteFolder(folder)
     }
-
     suspend fun getFolderById(id: Int): Folder? = noteRepository.getFolderById(id)
     fun getFolderByIdLiveData(id: Int): LiveData<Folder?> {
         return noteRepository.getFolderByIdLiveData(id)
@@ -88,6 +54,7 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
     fun getNotesSortedByTitle(folderId: Int) = noteRepository.getNotesSortedByTitle(folderId)
     fun getNotesSortedByDateDesc(folderId: Int) = noteRepository.getNotesSortedByDateDesc(folderId)
     fun getNotesSortedByDateAsc(folderId: Int) = noteRepository.getNotesSortedByDateAsc(folderId)
+    fun getNoteByIdLiveData(id: Int): LiveData<Note?> = noteRepository.getNoteByIdLiveData(id)
 
     fun togglePinStatus(note: Note) = viewModelScope.launch {
         val updatedNote = note.copy(isPinned = !note.isPinned)
