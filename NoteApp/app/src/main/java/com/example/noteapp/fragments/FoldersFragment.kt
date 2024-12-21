@@ -1,5 +1,8 @@
 package com.example.noteapp.fragments
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.view.*
 import android.widget.EditText
@@ -9,15 +12,22 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.noteapp.MainActivity
 import com.example.noteapp.R
 import com.example.noteapp.adapter.FoldersAdapter
 import com.example.noteapp.databinding.FragmentFoldersBinding
+import com.example.noteapp.model.Folder
+import com.example.noteapp.network.RetrofitInstance
 import com.example.noteapp.viewmodel.NoteViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
 
@@ -77,6 +87,7 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
             }
             findNavController().navigate(R.id.action_foldersFragment_to_checkListFragment, bundle)
         }
+        fetchAndDisplayQuote()
     }
 
     private fun setupRecyclerView() {
@@ -140,6 +151,52 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
                 Toast.makeText(requireContext(), "Logout failed.", Toast.LENGTH_SHORT).show()
             }
 
+        }
+    }
+
+    private fun fetchAndDisplayQuote() {
+        if (!isNetworkAvailable(requireContext())) {
+            binding.quoteTextView.text = "No internet connection."
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    RetrofitInstance.api.getRandomQuote()
+                }
+
+                if (response.isSuccessful && response.body() != null) {
+                    val quotes = response.body()!!
+                    if (quotes.isNotEmpty()) {
+                        val quote = quotes[0]
+                        val quoteText = "\"${quote.q}\" \n- ${quote.a}"
+                        binding.quoteTextView.text = quoteText
+                    } else {
+                        binding.quoteTextView.text = "Could not load a motivational quote."
+                    }
+                } else {
+                    binding.quoteTextView.text = "Could not load a motivational quote."
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                binding.quoteTextView.text = "Error while loading the quote."
+            }
+
+        }
+    }
+
+    private fun isNetworkAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        val network = connectivityManager.activeNetwork ?: return false
+        val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+        return when {
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+            else -> false
         }
     }
 
