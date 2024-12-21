@@ -25,5 +25,6 @@ class NoteRepository(private val db: NoteDatabase) {
     fun getNotesSortedByDateAsc(folderId: Int) = db.getNoteDao().getNotesSortedByDateAsc(folderId)
     suspend fun getNotesListByFolderId(folderId: Int): List<Note> = db.getNoteDao().getNotesListByFolderId(folderId)
     fun getNoteByIdLiveData(id: Int): LiveData<Note?> = db.getNoteDao().getNoteByIdLiveData(id)
+    suspend fun deleteNotesByFolder(folderId: Int) = db.getNoteDao().deleteNotesByFolder(folderId)
 
 }

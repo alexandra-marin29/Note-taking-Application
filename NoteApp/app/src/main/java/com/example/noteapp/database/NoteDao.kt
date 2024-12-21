@@ -38,4 +38,9 @@ interface NoteDao {
 
     @Query("SELECT * FROM notes WHERE id = :noteId LIMIT 1")
     fun getNoteByIdLiveData(noteId: Int): LiveData<Note?>
+
+    @Query("DELETE FROM notes WHERE folderId = :folderId")
+    suspend fun deleteNotesByFolder(folderId: Int)
+
+
 }
