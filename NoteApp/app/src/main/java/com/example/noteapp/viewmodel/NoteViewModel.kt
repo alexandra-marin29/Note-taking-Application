@@ -22,9 +22,9 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
             if (notesFolder == null) {
                 noteRepository.insertFolder(Folder(id = 1, folderName = "Notes"))
             }
+            noteRepository.syncLocalWithFirestore()
         }
     }
-
 
     fun addNote(note: Note, callback: (Long) -> Unit) =
         viewModelScope.launch {
@@ -49,6 +49,7 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
     fun addFolder(folderName: String) = viewModelScope.launch {
         noteRepository.insertFolder(Folder(id = 0, folderName = folderName))
     }
+
     fun deleteFolder(folder: Folder) = viewModelScope.launch {
         val notes = noteRepository.getNotesListByFolderId(folder.id)
         notes.forEach { note ->
@@ -78,11 +79,12 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
         pendingIntent.cancel()
     }
 
-
     suspend fun getFolderById(id: Int): Folder? = noteRepository.getFolderById(id)
+
     fun getFolderByIdLiveData(id: Int): LiveData<Folder?> {
         return noteRepository.getFolderByIdLiveData(id)
     }
+
     fun getAllNotesByFolder(folderId: Int) = noteRepository.getAllNotesByFolder(folderId)
     fun searchNoteInFolder(query: String?, folderId: Int) = noteRepository.searchNoteInFolder(query, folderId)
     fun getNotesSortedByTitle(folderId: Int) = noteRepository.getNotesSortedByTitle(folderId)

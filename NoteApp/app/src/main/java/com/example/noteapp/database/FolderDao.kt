@@ -7,7 +7,7 @@ import com.example.noteapp.model.Folder
 @Dao
 interface FolderDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertFolder(folder: Folder)
+    suspend fun insertFolder(folder: Folder): Long
 
     @Query("SELECT * FROM folders ORDER BY folderName ASC")
     fun getAllFolders(): LiveData<List<Folder>>
