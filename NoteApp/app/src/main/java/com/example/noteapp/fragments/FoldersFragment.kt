@@ -12,20 +12,20 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.example.noteapp.MainActivity
 import com.example.noteapp.R
 import com.example.noteapp.adapter.FoldersAdapter
 import com.example.noteapp.databinding.FragmentFoldersBinding
-import com.example.noteapp.model.Folder
 import com.example.noteapp.network.RetrofitInstance
 import com.example.noteapp.viewmodel.NoteViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -38,11 +38,21 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
     private lateinit var foldersAdapter: FoldersAdapter
     private lateinit var auth: FirebaseAuth
 
+    private var hasQuoteBeenFetched = false
+
+    private var currentQuote: String? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?,
+        savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentFoldersBinding.inflate(inflater, container, false)
+
+        savedInstanceState?.let { bundle ->
+            hasQuoteBeenFetched = bundle.getBoolean("QUOTE_FETCHED", false)
+            currentQuote = bundle.getString("CURRENT_QUOTE")
+        }
+
         return binding.root
     }
 
@@ -69,17 +79,11 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
             }
         }
 
-        binding.addFolderFab.setOnClickListener {
-            showNewFolderDialog()
-        }
-
+        binding.addFolderFab.setOnClickListener { showNewFolderDialog() }
         binding.addNoteFab.setOnClickListener {
-            val bundle = Bundle().apply {
-                putInt("folderId", 1)
-            }
+            val bundle = Bundle().apply { putInt("folderId", 1) }
             findNavController().navigate(R.id.action_foldersFragment_to_addNoteFragment, bundle)
         }
-
         binding.checkBoxFab.setOnClickListener {
             val bundle = Bundle().apply {
                 putInt("folderId", 1)
@@ -87,8 +91,23 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
             }
             findNavController().navigate(R.id.action_foldersFragment_to_checkListFragment, bundle)
         }
-        fetchAndDisplayQuote()
+
+
+        if (currentQuote.isNullOrBlank()) {
+            binding.quoteTextView.text = "Loading motivational quote..."
+        } else {
+            binding.quoteTextView.text = currentQuote
+        }
+
+
+        if (!hasQuoteBeenFetched) {
+            fetchAndDisplayQuote()
+            hasQuoteBeenFetched = true
+        }
+
+        startPeriodicQuoteRefresh()
     }
+
 
     private fun setupRecyclerView() {
         foldersAdapter = FoldersAdapter { folder ->
@@ -98,7 +117,8 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
             findNavController().navigate(R.id.action_foldersFragment_to_homeFragment, bundle)
         }
         binding.foldersRecyclerView.adapter = foldersAdapter
-        binding.foldersRecyclerView.layoutManager = androidx.recyclerview.widget.GridLayoutManager(context, 1)
+        binding.foldersRecyclerView.layoutManager =
+            androidx.recyclerview.widget.GridLayoutManager(context, 1)
     }
 
     private fun showNewFolderDialog() {
@@ -124,6 +144,7 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
             .show()
     }
 
+
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menu.clear()
         menuInflater.inflate(R.menu.folder_menu, menu)
@@ -141,7 +162,6 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
 
     private fun logout() {
         FirebaseAuth.getInstance().signOut()
-
         val googleSignInClient = GoogleSignIn.getClient(requireContext(), GoogleSignInOptions.DEFAULT_SIGN_IN)
         googleSignInClient.signOut().addOnCompleteListener { task ->
             if (task.isSuccessful) {
@@ -150,13 +170,14 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
             } else {
                 Toast.makeText(requireContext(), "Logout failed.", Toast.LENGTH_SHORT).show()
             }
-
         }
     }
 
+
     private fun fetchAndDisplayQuote() {
         if (!isNetworkAvailable(requireContext())) {
-            binding.quoteTextView.text = "No internet connection."
+            currentQuote = "No internet connection."
+            binding.quoteTextView.text = currentQuote
             return
         }
 
@@ -171,24 +192,26 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
                     if (quotes.isNotEmpty()) {
                         val quote = quotes[0]
                         val quoteText = "\"${quote.q}\" \n- ${quote.a}"
+                        currentQuote = quoteText
                         binding.quoteTextView.text = quoteText
                     } else {
-                        binding.quoteTextView.text = "Could not load a motivational quote."
+                        currentQuote = "Could not load a motivational quote."
+                        binding.quoteTextView.text = currentQuote
                     }
                 } else {
-                    binding.quoteTextView.text = "Could not load a motivational quote."
+                    currentQuote = "Could not load a motivational quote."
+                    binding.quoteTextView.text = currentQuote
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                binding.quoteTextView.text = "Error while loading the quote."
+                currentQuote = "Error while loading the quote."
+                binding.quoteTextView.text = currentQuote
             }
-
         }
     }
 
     private fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
         val network = connectivityManager.activeNetwork ?: return false
         val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
 
@@ -198,6 +221,23 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
             activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
             else -> false
         }
+    }
+
+    private fun startPeriodicQuoteRefresh() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (true) {
+                    delay(30000) 
+                    fetchAndDisplayQuote()
+                }
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean("QUOTE_FETCHED", hasQuoteBeenFetched)
+        outState.putString("CURRENT_QUOTE", currentQuote)
+        super.onSaveInstanceState(outState)
     }
 
     override fun onDestroyView() {
