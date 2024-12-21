@@ -5,18 +5,19 @@ import android.view.*
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.GridLayoutManager
 import com.example.noteapp.MainActivity
 import com.example.noteapp.R
 import com.example.noteapp.adapter.FoldersAdapter
 import com.example.noteapp.databinding.FragmentFoldersBinding
 import com.example.noteapp.viewmodel.NoteViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
 
 class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
 
@@ -25,10 +26,11 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
 
     private lateinit var notesViewModel: NoteViewModel
     private lateinit var foldersAdapter: FoldersAdapter
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         _binding = FragmentFoldersBinding.inflate(inflater, container, false)
         return binding.root
@@ -37,6 +39,7 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         notesViewModel = (activity as MainActivity).noteViewModel
+        auth = FirebaseAuth.getInstance()
 
         requireActivity().title = "NoteApp"
 
@@ -84,7 +87,7 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
             findNavController().navigate(R.id.action_foldersFragment_to_homeFragment, bundle)
         }
         binding.foldersRecyclerView.adapter = foldersAdapter
-        binding.foldersRecyclerView.layoutManager = GridLayoutManager(context, 1)
+        binding.foldersRecyclerView.layoutManager = androidx.recyclerview.widget.GridLayoutManager(context, 1)
     }
 
     private fun showNewFolderDialog() {
@@ -110,14 +113,34 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
             .show()
     }
 
-
-
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menu.clear()
+        menuInflater.inflate(R.menu.folder_menu, menu)
     }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-        return false
+        return when (menuItem.itemId) {
+            R.id.logoutMenu -> {
+                logout()
+                true
+            }
+            else -> false
+        }
+    }
+
+    private fun logout() {
+        FirebaseAuth.getInstance().signOut()
+
+        val googleSignInClient = GoogleSignIn.getClient(requireContext(), GoogleSignInOptions.DEFAULT_SIGN_IN)
+        googleSignInClient.signOut().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Toast.makeText(requireContext(), "Successfully logged out.", Toast.LENGTH_SHORT).show()
+                findNavController().navigate(R.id.action_foldersFragment_to_loginFragment)
+            } else {
+                Toast.makeText(requireContext(), "Logout failed.", Toast.LENGTH_SHORT).show()
+            }
+
+        }
     }
 
     override fun onDestroyView() {

@@ -19,6 +19,9 @@ import com.example.noteapp.model.Note
 import com.example.noteapp.viewmodel.NoteViewModel
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.appcompat.app.AlertDialog
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
 
 private const val PREFS_NAME = "note_prefs"
 private const val KEY_SORT_INDEX = "sort_index"
@@ -168,6 +171,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
         }
     }
 
+
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
         return when (menuItem.itemId) {
             R.id.sortMenu -> {
@@ -228,6 +232,8 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
             }
         })
     }
+
+
 
     override fun onDestroy() {
         super.onDestroy()

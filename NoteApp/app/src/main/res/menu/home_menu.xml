@@ -8,14 +8,18 @@
         android:title="Search"
         app:showAsAction="ifRoom"
         app:actionViewClass="androidx.appcompat.widget.SearchView" />
+
     <item
         android:id="@+id/sortMenu"
         android:icon="@drawable/baseline_sort_24"
         android:title="Sort"
         app:showAsAction="always" />
+
     <item
         android:id="@+id/deleteFolderMenu"
         android:title="Delete Folder"
         android:icon="@drawable/baseline_folder_delete_24"
         app:showAsAction="ifRoom" />
+
+
 </menu>
