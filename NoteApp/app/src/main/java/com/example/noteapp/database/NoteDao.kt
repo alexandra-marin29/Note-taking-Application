@@ -22,7 +22,7 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE (noteTitle LIKE :query OR noteDesc LIKE :query) AND folderId = :folderId AND userId = :userId ORDER BY isPinned DESC, id DESC")
     fun searchNoteInFolder(query: String?, folderId: Int, userId: String): LiveData<List<Note>>
 
-    @Query("SELECT * FROM notes WHERE folderId = :folderId AND userId = :userId ORDER BY isPinned DESC, noteTitle ASC")
+    @Query("SELECT * FROM notes WHERE folderId = :folderId AND userId = :userId ORDER BY isPinned DESC, noteTitle COLLATE NOCASE ASC")
     fun getNotesSortedByTitle(folderId: Int, userId: String): LiveData<List<Note>>
 
     @Query("SELECT * FROM notes WHERE folderId = :folderId AND userId = :userId ORDER BY isPinned DESC, dateCreated DESC")
