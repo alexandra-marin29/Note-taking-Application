@@ -51,7 +51,7 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
 
     private var selectedColorHex: String = "#FFFFFFFF"
 
-    private var folderId: Int = 1 // Default folderId
+    private var folderId: Int = -1 // Default folderId
 
     private var isPinned: Boolean = false
 
@@ -93,7 +93,7 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
         addNoteView = view
 
         arguments?.let {
-            folderId = it.getInt("folderId", 1)
+            folderId = it.getInt("folderId", -1)
         }
     }
 

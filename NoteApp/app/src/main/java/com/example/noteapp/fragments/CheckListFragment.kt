@@ -56,7 +56,7 @@ class CheckListFragment : Fragment(R.layout.fragment_check_list), MenuProvider {
     private lateinit var checkListContainer: LinearLayout
     private lateinit var checklistTitleEditText: EditText
 
-    private var folderId: Int = 1 // implicit Notes
+    private var folderId: Int = -1 // implicit Notes
     private var isPinned: Boolean = false
 
     private var reminderTime: Long? = null
@@ -94,7 +94,7 @@ class CheckListFragment : Fragment(R.layout.fragment_check_list), MenuProvider {
         checklistTitleEditText = binding.checklistTitle
 
         arguments?.let {
-            folderId = it.getInt("folderId", 1)
+            folderId = it.getInt("folderId", -1)
             currentNote = it.getParcelable("note")
             isPinned = currentNote?.isPinned ?: false
             reminderTime = currentNote?.reminderTime

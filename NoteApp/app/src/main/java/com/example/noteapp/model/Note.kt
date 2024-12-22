@@ -58,7 +58,7 @@ data class Note(
                 noteDesc = map["noteDesc"] as String? ?: "",
                 noteColor = map["noteColor"] as String? ?: "#FFFFFFFF",
                 dateCreated = map["dateCreated"] as Long? ?: System.currentTimeMillis(),
-                folderId = (map["folderId"] as Long?)?.toInt() ?: 1,
+                folderId = (map["folderId"] as Long?)?.toInt() ?: 0,
                 isPinned = map["isPinned"] as Boolean? ?: false,
                 reminderTime = map["reminderTime"] as Long?,
                 imageUris = map["imageUris"] as String? ?: "[]",

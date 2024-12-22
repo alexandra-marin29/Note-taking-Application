@@ -11,6 +11,7 @@ import androidx.room.migration.Migration
 
 @Database(entities = [Note::class, Folder::class], version = 8)
 abstract class NoteDatabase : RoomDatabase() {
+
     abstract fun getNoteDao(): NoteDao
     abstract fun getFolderDao(): FolderDao
 
@@ -38,7 +39,6 @@ abstract class NoteDatabase : RoomDatabase() {
             }
         }
 
-
         operator fun invoke(context: Context) = instance ?: synchronized(LOCK) {
             instance ?: createDatabase(context).also { instance = it }
         }
@@ -53,7 +53,7 @@ abstract class NoteDatabase : RoomDatabase() {
                 .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
-                        db.execSQL("INSERT INTO folders (id, folderName) VALUES (1, 'Notes')")
+
                     }
                 })
                 .build()

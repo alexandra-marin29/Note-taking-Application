@@ -16,12 +16,9 @@ import kotlinx.coroutines.launch
 
 class NoteViewModel(app: Application, private val noteRepository: NoteRepository) : AndroidViewModel(app) {
 
+   
     init {
         viewModelScope.launch {
-            val notesFolder = noteRepository.getFolderByName("Notes")
-            if (notesFolder == null) {
-                noteRepository.insertFolder(Folder(id = 1, folderName = "Notes"))
-            }
             noteRepository.syncLocalWithFirestore()
         }
     }

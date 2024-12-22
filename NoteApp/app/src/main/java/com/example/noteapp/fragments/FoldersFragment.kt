@@ -80,18 +80,6 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
         }
 
         binding.addFolderFab.setOnClickListener { showNewFolderDialog() }
-        binding.addNoteFab.setOnClickListener {
-            val bundle = Bundle().apply { putInt("folderId", 1) }
-            findNavController().navigate(R.id.action_foldersFragment_to_addNoteFragment, bundle)
-        }
-        binding.checkBoxFab.setOnClickListener {
-            val bundle = Bundle().apply {
-                putInt("folderId", 1)
-                putParcelable("note", null)
-            }
-            findNavController().navigate(R.id.action_foldersFragment_to_checkListFragment, bundle)
-        }
-
 
         if (currentQuote.isNullOrBlank()) {
             binding.quoteTextView.text = "Loading motivational quote..."

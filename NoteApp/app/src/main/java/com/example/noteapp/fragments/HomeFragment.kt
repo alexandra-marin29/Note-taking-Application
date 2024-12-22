@@ -19,9 +19,6 @@ import com.example.noteapp.model.Note
 import com.example.noteapp.viewmodel.NoteViewModel
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.appcompat.app.AlertDialog
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.FirebaseAuth
 
 private const val PREFS_NAME = "note_prefs"
 private const val KEY_SORT_INDEX = "sort_index"
@@ -35,8 +32,8 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
     private lateinit var noteAdapter: NoteAdapter
     private var selectedSortOptionIndex = 1
 
-    private var folderId: Int = 1 // Default folderId
-    private var folderName: String = "Notes"
+    private var folderId: Int = -1
+    private var folderName: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -48,11 +45,18 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         arguments?.let {
-            folderId = it.getInt("folderId", 1)
+            folderId = it.getInt("folderId", -1)
         }
 
         notesViewModel = (activity as MainActivity).noteViewModel
+
+
+        if (folderId == -1) {
+            Toast.makeText(requireContext(), "No valid folder selected.", Toast.LENGTH_SHORT).show()
+
+        }
 
         notesViewModel.getFolderByIdLiveData(folderId).observe(viewLifecycleOwner, Observer { folder ->
             if (folder != null) {
@@ -68,7 +72,6 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
         selectedSortOptionIndex = prefs.getInt(KEY_SORT_INDEX, 1) // 1 = Newest first
 
         setupHomeRecyclerView()
-
         applySorting(selectedSortOptionIndex)
 
         binding.addNoteFab.setOnClickListener {
@@ -110,9 +113,9 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
         }
     }
 
-    private fun updateUI(note: List<Note>?) {
-        if (note != null) {
-            if (note.isNotEmpty()) {
+    private fun updateUI(notes: List<Note>?) {
+        if (notes != null) {
+            if (notes.isNotEmpty()) {
                 binding.emptyNotesImage.visibility = View.GONE
                 binding.homeRecyclerView.visibility = View.VISIBLE
             } else {
@@ -131,7 +134,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
         }, isHomePage = true)
 
         binding.homeRecyclerView.apply {
-            this.adapter = noteAdapter
+            adapter = noteAdapter
             layoutManager = GridLayoutManager(context, 2)
             setHasFixedSize(true)
         }
@@ -163,14 +166,10 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
         menuSearch.isSubmitButtonEnabled = false
         menuSearch.setOnQueryTextListener(this)
 
-        val deleteMenuItem = menu.findItem(R.id.deleteFolderMenu)
-        if (folderId == 1) {
-            deleteMenuItem.isVisible = false
-        } else {
-            deleteMenuItem.isVisible = true
-        }
-    }
 
+        val deleteMenuItem = menu.findItem(R.id.deleteFolderMenu)
+        deleteMenuItem.isVisible = true
+    }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
         return when (menuItem.itemId) {
@@ -221,19 +220,19 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
 
     private fun deleteCurrentFolder() {
         notesViewModel.getFolderByIdLiveData(folderId).observe(viewLifecycleOwner, Observer { folder ->
-            if (folder != null && folder.folderName != "Notes") {
+            if (folder != null) {
                 notesViewModel.deleteFolder(folder)
-
-                Toast.makeText(requireContext(), "Folder \"$folderName\" and all its notes have been deleted.", Toast.LENGTH_SHORT).show()
-
+                Toast.makeText(
+                    requireContext(),
+                    "Folder \"$folderName\" and all its notes have been deleted.",
+                    Toast.LENGTH_SHORT
+                ).show()
                 findNavController().popBackStack()
             } else {
-                Toast.makeText(requireContext(), "Cannot delete the default 'Notes' folder.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Folder not found or invalid.", Toast.LENGTH_SHORT).show()
             }
         })
     }
-
-
 
     override fun onDestroy() {
         super.onDestroy()
