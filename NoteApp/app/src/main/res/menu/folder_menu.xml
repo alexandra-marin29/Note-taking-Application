@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/userIconMenu"
+        android:icon="@drawable/baseline_person_24"
+        android:title=""
+        app:showAsAction="always">
+
+        <menu>
+            <item
+                android:id="@+id/currentUserEmail"
+                android:title="Email: ..."
+                android:checkable="false"
+                android:enabled="true"/>
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/logoutMenu"
+        android:icon="@drawable/baseline_logout_24"
+        android:title="Logout"
+        app:showAsAction="ifRoom" />
+
+
+</menu>

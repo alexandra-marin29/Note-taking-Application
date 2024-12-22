@@ -36,6 +36,7 @@ import com.example.noteapp.model.Note
 import com.example.noteapp.receiver.ReminderReceiver
 import com.example.noteapp.util.createColorBorderDrawable
 import com.example.noteapp.viewmodel.NoteViewModel
+import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
 import org.json.JSONArray
 import java.io.File
@@ -51,7 +52,7 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
 
     private var selectedColorHex: String = "#FFFFFFFF"
 
-    private var folderId: Int = 1 // Default folderId
+    private var folderId: Int = -1 // Default folderId
 
     private var isPinned: Boolean = false
 
@@ -60,10 +61,10 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
     private val imageUriList = mutableListOf<String>()
     private val urlList = mutableListOf<String>()
 
-    // Request code for READ_MEDIA_IMAGES
+    private lateinit var auth: FirebaseAuth
+    private var userId: String = ""
     private val requestReadMediaImagesPermission = 1002
 
-    // Launcher for picking images
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             val copiedUri = copyImageToInternalStorage(it)
@@ -92,8 +93,11 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
         notesViewModel = (activity as MainActivity).noteViewModel
         addNoteView = view
 
+        auth = FirebaseAuth.getInstance()
+        userId = auth.currentUser?.uid ?: ""
+
         arguments?.let {
-            folderId = it.getInt("folderId", 1)
+            folderId = it.getInt("folderId", -1)
         }
     }
 
@@ -115,7 +119,8 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
                 isPinned = isPinned,
                 reminderTime = reminderTime,
                 imageUris = imageUrisJson,
-                urls = urlsJson
+                urls = urlsJson,
+                userId = userId
 
             )
             notesViewModel.addNote(note) { newId ->

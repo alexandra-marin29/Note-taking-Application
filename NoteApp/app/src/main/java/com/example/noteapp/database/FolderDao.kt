@@ -6,14 +6,15 @@ import com.example.noteapp.model.Folder
 
 @Dao
 interface FolderDao {
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertFolder(folder: Folder)
+    suspend fun insertFolder(folder: Folder): Long
 
-    @Query("SELECT * FROM folders ORDER BY folderName ASC")
-    fun getAllFolders(): LiveData<List<Folder>>
+    @Query("SELECT * FROM folders WHERE userId = :userId ORDER BY folderName ASC")
+    fun getAllFoldersByUser(userId: String): LiveData<List<Folder>>
 
-    @Query("SELECT * FROM folders WHERE folderName = :name LIMIT 1")
-    suspend fun getFolderByName(name: String): Folder?
+    @Query("SELECT * FROM folders WHERE folderName = :name AND userId = :userId LIMIT 1")
+    suspend fun getFolderByName(name: String, userId: String): Folder?
 
     @Query("SELECT * FROM folders WHERE id = :id LIMIT 1")
     suspend fun getFolderById(id: Int): Folder?

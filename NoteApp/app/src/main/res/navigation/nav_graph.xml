@@ -3,14 +3,40 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/foldersFragment">
+    app:startDestination="@id/loginFragment">
+
+    <!-- LoginFragment -->
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.noteapp.fragments.LoginFragment"
+        android:label="Login">
+
+        <action
+            android:id="@+id/action_loginFragment_to_foldersFragment"
+            app:destination="@id/foldersFragment" />
+
+        <action
+            android:id="@+id/action_loginFragment_to_registerFragment"
+            app:destination="@id/registerFragment" />
+    </fragment>
+
+    <!-- RegisterFragment -->
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="com.example.noteapp.fragments.RegisterFragment"
+        android:label="Register">
+
+        <action
+            android:id="@+id/action_registerFragment_to_foldersFragment"
+            app:destination="@id/foldersFragment" />
+    </fragment>
 
     <!-- FoldersFragment -->
     <fragment
         android:id="@+id/foldersFragment"
         android:name="com.example.noteapp.fragments.FoldersFragment"
         android:label="Folders">
-        <!-- Navigate to HomeFragment -->
+
         <action
             android:id="@+id/action_foldersFragment_to_homeFragment"
             app:destination="@id/homeFragment">
@@ -20,7 +46,7 @@
                 android:defaultValue="1" />
         </action>
 
-        <!-- Navigate to AddNoteFragment -->
+
         <action
             android:id="@+id/action_foldersFragment_to_addNoteFragment"
             app:destination="@id/addNoteFragment">
@@ -30,7 +56,7 @@
                 android:defaultValue="1" />
         </action>
 
-        <!-- Navigate to CheckListFragment -->
+
         <action
             android:id="@+id/action_foldersFragment_to_checkListFragment"
             app:destination="@id/checkListFragment">
@@ -43,6 +69,12 @@
                 app:argType="com.example.noteapp.model.Note"
                 app:nullable="true" />
         </action>
+
+        <action
+            android:id="@+id/action_foldersFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <!-- HomeFragment -->
@@ -50,7 +82,14 @@
         android:id="@+id/homeFragment"
         android:name="com.example.noteapp.fragments.HomeFragment"
         android:label="Home">
-        <!-- Navigate to AddNoteFragment -->
+
+        <action
+            android:id="@+id/action_homeFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+
+
         <action
             android:id="@+id/action_homeFragment_to_addNoteFragment"
             app:destination="@id/addNoteFragment">
@@ -59,7 +98,7 @@
                 app:argType="integer" />
         </action>
 
-        <!-- Navigate to CheckListFragment -->
+
         <action
             android:id="@+id/action_homeFragment_to_checkListFragment"
             app:destination="@id/checkListFragment">

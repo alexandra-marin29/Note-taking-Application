@@ -18,19 +18,15 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
 
     init {
         viewModelScope.launch {
-            val notesFolder = noteRepository.getFolderByName("Notes")
-            if (notesFolder == null) {
-                noteRepository.insertFolder(Folder(id = 1, folderName = "Notes"))
-            }
+            noteRepository.syncLocalWithFirestore()
         }
     }
 
-
-    fun addNote(note: Note, callback: (Long) -> Unit) =
-        viewModelScope.launch {
-            val newId = noteRepository.insertNote(note)
+    fun addNote(note: Note, callback: (Long) -> Unit) = viewModelScope.launch {
+        noteRepository.insertNote(note).also { newId ->
             callback(newId)
         }
+    }
 
     fun deleteNote(note: Note) = viewModelScope.launch {
         if (note.reminderTime != null) {
@@ -39,59 +35,64 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
         noteRepository.deleteNote(note)
     }
 
-    fun updateNote(note: Note) =
-        viewModelScope.launch {
-            noteRepository.updateNote(note)
-        }
-
-    fun getAllFolders() = noteRepository.getAllFolders()
-
-    fun addFolder(folderName: String) = viewModelScope.launch {
-        noteRepository.insertFolder(Folder(id = 0, folderName = folderName))
+    fun updateNote(note: Note) = viewModelScope.launch {
+        noteRepository.updateNote(note)
     }
+
+
+
+    // FOLDERS
+    fun addFolder(folderName: String, userId: String) = viewModelScope.launch {
+        val folder = Folder(folderName = folderName, userId = userId)
+        noteRepository.insertFolder(folder)
+    }
+
+    fun getAllFoldersByUserId(userId: String) = noteRepository.getAllFoldersByUserId(userId)
+
     fun deleteFolder(folder: Folder) = viewModelScope.launch {
-        val notes = noteRepository.getNotesListByFolderId(folder.id)
-        notes.forEach { note ->
-            if (note.reminderTime != null) {
-                cancelReminder(note)
-            }
+        val notes = noteRepository.getNotesListByFolderId(folder.id, folder.userId)
+        notes.forEach { n ->
+            if (n.reminderTime != null) cancelReminder(n)
         }
         noteRepository.deleteFolder(folder)
     }
 
+    // NOTES - queries
+    fun getAllNotesByFolder(folderId: Int, userId: String) = noteRepository.getAllNotesByFolder(folderId, userId)
+
+    fun searchNoteInFolder(query: String?, folderId: Int, userId: String) = noteRepository.searchNoteInFolder(query, folderId, userId)
+    fun getNotesSortedByTitle(folderId: Int, userId: String) = noteRepository.getNotesSortedByTitle(folderId, userId)
+    fun getNotesSortedByDateDesc(folderId: Int, userId: String) = noteRepository.getNotesSortedByDateDesc(folderId, userId)
+    fun getNotesSortedByDateAsc(folderId: Int, userId: String) = noteRepository.getNotesSortedByDateAsc(folderId, userId)
+
+    fun togglePinStatus(note: Note) = viewModelScope.launch {
+        val updatedNote = note.copy(isPinned = !note.isPinned)
+        noteRepository.updateNote(updatedNote)
+    }
+
+    suspend fun getFolderById(id: Int) = noteRepository.getFolderById(id)
+    fun getFolderByIdLiveData(id: Int) = noteRepository.getFolderByIdLiveData(id)
+    fun getNoteByIdLiveData(id: Int) = noteRepository.getNoteByIdLiveData(id)
+
+    fun getActiveReminders(currentTime: Long, userId: String, callback: (List<Note>) -> Unit) = viewModelScope.launch {
+        val reminders = noteRepository.getActiveReminders(currentTime, userId)
+        callback(reminders)
+    }
+
+
     private fun cancelReminder(note: Note) {
         val context = getApplication<Application>().applicationContext
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
         val intent = Intent(context, ReminderReceiver::class.java).apply {
             putExtra("noteId", note.id)
         }
-
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             note.id,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-
         alarmManager.cancel(pendingIntent)
         pendingIntent.cancel()
-    }
-
-
-    suspend fun getFolderById(id: Int): Folder? = noteRepository.getFolderById(id)
-    fun getFolderByIdLiveData(id: Int): LiveData<Folder?> {
-        return noteRepository.getFolderByIdLiveData(id)
-    }
-    fun getAllNotesByFolder(folderId: Int) = noteRepository.getAllNotesByFolder(folderId)
-    fun searchNoteInFolder(query: String?, folderId: Int) = noteRepository.searchNoteInFolder(query, folderId)
-    fun getNotesSortedByTitle(folderId: Int) = noteRepository.getNotesSortedByTitle(folderId)
-    fun getNotesSortedByDateDesc(folderId: Int) = noteRepository.getNotesSortedByDateDesc(folderId)
-    fun getNotesSortedByDateAsc(folderId: Int) = noteRepository.getNotesSortedByDateAsc(folderId)
-    fun getNoteByIdLiveData(id: Int): LiveData<Note?> = noteRepository.getNoteByIdLiveData(id)
-
-    fun togglePinStatus(note: Note) = viewModelScope.launch {
-        val updatedNote = note.copy(isPinned = !note.isPinned)
-        noteRepository.updateNote(updatedNote)
     }
 }
