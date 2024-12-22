@@ -211,8 +211,37 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                             requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                         imm.showSoftInput(newEdit, InputMethodManager.SHOW_IMPLICIT)
                         true
-                    } else false
-                } else false
+                    } else if (keyCode == KeyEvent.KEYCODE_DEL) {
+                        if (text.isEmpty()) {
+                            val index = binding.editChecklistContainer.indexOfChild(rowLayout)
+                            if (index != 0) {
+                                binding.editChecklistContainer.removeView(rowLayout)
+
+                                if (index - 1 >= 0) {
+                                    val previousRow = binding.editChecklistContainer.getChildAt(index - 1) as LinearLayout
+                                    val previousEditText = previousRow.getChildAt(1) as EditText
+
+                                    previousEditText.requestFocus()
+                                    previousEditText.setSelection(previousEditText.text.length)
+
+                                    val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                                    imm.showSoftInput(previousEditText, InputMethodManager.SHOW_IMPLICIT)
+                                }
+
+                                true
+                            } else {
+                                Toast.makeText(requireContext(), "The first checkbox cannot be deleted", Toast.LENGTH_SHORT).show()
+                                true
+                            }
+                        } else {
+                            false
+                        }
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
             }
         }
 
@@ -221,6 +250,8 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
         binding.editChecklistContainer.addView(rowLayout)
         return editText
     }
+
+
 
     private fun addImageToContainer(uri: Uri) {
         binding.editImagesContainer.visibility = View.VISIBLE

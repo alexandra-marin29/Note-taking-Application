@@ -275,15 +275,46 @@ class CheckListFragment : Fragment(R.layout.fragment_check_list), MenuProvider {
 
             setOnKeyListener { _, keyCode, event ->
                 if (event.action == KeyEvent.ACTION_DOWN) {
-                    if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-                        val newEdit = addCheckListRow("", false)
-                        newEdit.requestFocus()
-                        val imm =
-                            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                        imm.showSoftInput(newEdit, InputMethodManager.SHOW_IMPLICIT)
-                        true
-                    } else false
-                } else false
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_DPAD_DOWN -> {
+                            val newEdit = addCheckListRow("", false)
+                            newEdit.requestFocus()
+                            val imm =
+                                requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                            imm.showSoftInput(newEdit, InputMethodManager.SHOW_IMPLICIT)
+                            true
+                        }
+                        KeyEvent.KEYCODE_DEL -> {
+                            if (text.isEmpty()) {
+                                val index = checkListContainer.indexOfChild(rowLayout)
+                                if (index != 0) {
+                                    checkListContainer.removeView(rowLayout)
+
+                                    if (index - 1 >= 0) {
+                                        val previousRow = checkListContainer.getChildAt(index - 1) as LinearLayout
+                                        val previousEditText = previousRow.getChildAt(1) as EditText
+
+                                        previousEditText.requestFocus()
+                                        previousEditText.setSelection(previousEditText.text.length)
+
+                                        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                                        imm.showSoftInput(previousEditText, InputMethodManager.SHOW_IMPLICIT)
+                                    }
+
+                                    true
+                                } else {
+                                    Toast.makeText(requireContext(), "The first checkbox cannot be deleted", Toast.LENGTH_SHORT).show()
+                                    true
+                                }
+                            } else {
+                                false
+                            }
+                        }
+                        else -> false
+                    }
+                } else {
+                    false
+                }
             }
         }
 
@@ -292,6 +323,9 @@ class CheckListFragment : Fragment(R.layout.fragment_check_list), MenuProvider {
         checkListContainer.addView(rowLayout)
         return editText
     }
+
+
+
 
     private fun saveCheckList() {
         val title = checklistTitleEditText.text.toString().trim()
