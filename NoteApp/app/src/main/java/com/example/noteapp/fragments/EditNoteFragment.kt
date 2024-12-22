@@ -36,6 +36,7 @@ import com.example.noteapp.model.Note
 import com.example.noteapp.receiver.ReminderReceiver
 import com.example.noteapp.util.createColorBorderDrawable
 import com.example.noteapp.viewmodel.NoteViewModel
+import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
 import org.json.JSONArray
 import org.json.JSONException
@@ -60,6 +61,9 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
     private val imageUriList = mutableListOf<String>()
     private val urlList = mutableListOf<String>()
+
+    private lateinit var auth: FirebaseAuth
+    private var userId: String = ""
 
     private val requestReadMediaImagesPermission = 1003
 
@@ -88,6 +92,9 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         notesViewModel = (activity as MainActivity).noteViewModel
+
+        auth = FirebaseAuth.getInstance()
+        userId = auth.currentUser?.uid ?: ""
 
         val menuHost: MenuHost = requireActivity()
         menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
@@ -343,7 +350,9 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             isPinned = isPinned,
             reminderTime = reminderTime,
             imageUris = imageUrisJson,
-            urls = urlsJson
+            urls = urlsJson,
+            userId = currentNote!!.userId
+
         ) ?: Note(
             id = 0,
             noteTitle = noteTitle,
@@ -354,7 +363,9 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             isPinned = isPinned,
             reminderTime = reminderTime,
             imageUris = imageUrisJson,
-            urls = urlsJson
+            urls = urlsJson,
+            userId = userId
+
         )
 
         if (currentNote == null) {

@@ -16,8 +16,7 @@ class NoteRepository(private val db: NoteDatabase) {
     suspend fun insertNote(note: Note): Long {
         val localId = db.getNoteDao().insertNote(note)
 
-        val userId = auth.currentUser?.uid ?: return localId
-
+        val userId = auth.currentUser?.uid ?: return localId // e bine să ai check
         val noteWithId = note.copy(id = localId.toInt())
         val noteMap = noteWithId.toMap()
 
@@ -30,12 +29,10 @@ class NoteRepository(private val db: NoteDatabase) {
         return localId
     }
 
-
     suspend fun updateNote(note: Note) {
         db.getNoteDao().updateNote(note)
 
         val userId = auth.currentUser?.uid ?: return
-
         val noteMap = note.toMap()
 
         firestore.collection("users").document(userId)
@@ -45,12 +42,10 @@ class NoteRepository(private val db: NoteDatabase) {
             .await()
     }
 
-
     suspend fun deleteNote(note: Note) {
         db.getNoteDao().deleteNote(note)
 
         val userId = auth.currentUser?.uid ?: return
-
         firestore.collection("users").document(userId)
             .collection("folders").document(note.folderId.toString())
             .collection("notes").document(note.id.toString())
@@ -58,12 +53,10 @@ class NoteRepository(private val db: NoteDatabase) {
             .await()
     }
 
-
     suspend fun insertFolder(folder: Folder) {
         val localId = db.getFolderDao().insertFolder(folder)
 
         val userId = auth.currentUser?.uid ?: return
-
         val folderWithId = folder.copy(id = localId.toInt())
         val folderMap = folderWithId.toMap()
 
@@ -73,41 +66,56 @@ class NoteRepository(private val db: NoteDatabase) {
             .await()
     }
 
-
     suspend fun deleteFolder(folder: Folder) {
         db.getFolderDao().deleteFolder(folder)
 
         val userId = auth.currentUser?.uid ?: return
-
         firestore.collection("users").document(userId)
             .collection("folders").document(folder.id.toString())
             .delete()
             .await()
     }
 
-    fun getAllFolders(): LiveData<List<Folder>> = db.getFolderDao().getAllFolders()
-    suspend fun getFolderByName(name: String): Folder? = db.getFolderDao().getFolderByName(name)
+    fun getAllFoldersByUserId(userId: String): LiveData<List<Folder>> {
+        return db.getFolderDao().getAllFoldersByUser(userId)
+    }
+
+    suspend fun getFolderByName(name: String, userId: String): Folder? {
+        return db.getFolderDao().getFolderByName(name, userId)
+    }
+
     suspend fun getFolderById(id: Int): Folder? = db.getFolderDao().getFolderById(id)
     fun getFolderByIdLiveData(id: Int): LiveData<Folder?> = db.getFolderDao().getFolderByIdLiveData(id)
-    fun getAllNotesByFolder(folderId: Int): LiveData<List<Note>> = db.getNoteDao().getAllNotesByFolder(folderId)
-    fun searchNoteInFolder(query: String?, folderId: Int): LiveData<List<Note>> =
-        db.getNoteDao().searchNoteInFolder(query, folderId)
 
-    fun getNotesSortedByTitle(folderId: Int): LiveData<List<Note>> =
-        db.getNoteDao().getNotesSortedByTitle(folderId)
+    fun getAllNotesByFolder(folderId: Int, userId: String): LiveData<List<Note>> {
+        return db.getNoteDao().getAllNotesByFolder(folderId, userId)
+    }
 
-    fun getNotesSortedByDateDesc(folderId: Int): LiveData<List<Note>> =
-        db.getNoteDao().getNotesSortedByDateDesc(folderId)
+    fun searchNoteInFolder(query: String?, folderId: Int, userId: String): LiveData<List<Note>> {
+        return db.getNoteDao().searchNoteInFolder(query, folderId, userId)
+    }
 
-    fun getNotesSortedByDateAsc(folderId: Int): LiveData<List<Note>> =
-        db.getNoteDao().getNotesSortedByDateAsc(folderId)
+    fun getNotesSortedByTitle(folderId: Int, userId: String): LiveData<List<Note>> {
+        return db.getNoteDao().getNotesSortedByTitle(folderId, userId)
+    }
 
-    suspend fun getNotesListByFolderId(folderId: Int): List<Note> =
-        db.getNoteDao().getNotesListByFolderId(folderId)
+    fun getNotesSortedByDateDesc(folderId: Int, userId: String): LiveData<List<Note>> {
+        return db.getNoteDao().getNotesSortedByDateDesc(folderId, userId)
+    }
 
-    fun getNoteByIdLiveData(id: Int): LiveData<Note?> = db.getNoteDao().getNoteByIdLiveData(id)
+    fun getNotesSortedByDateAsc(folderId: Int, userId: String): LiveData<List<Note>> {
+        return db.getNoteDao().getNotesSortedByDateAsc(folderId, userId)
+    }
 
-    suspend fun deleteNotesByFolder(folderId: Int) = db.getNoteDao().deleteNotesByFolder(folderId)
+    suspend fun getNotesListByFolderId(folderId: Int, userId: String): List<Note> {
+        return db.getNoteDao().getNotesListByFolderId(folderId, userId)
+    }
+
+    fun getNoteByIdLiveData(noteId: Int): LiveData<Note?> = db.getNoteDao().getNoteByIdLiveData(noteId)
+
+    suspend fun deleteNotesByFolder(folderId: Int, userId: String) {
+        db.getNoteDao().deleteNotesByFolder(folderId, userId)
+    }
 
     suspend fun syncLocalWithFirestore() {
         val userId = auth.currentUser?.uid ?: return
@@ -117,7 +125,10 @@ class NoteRepository(private val db: NoteDatabase) {
 
         for (folderDoc in foldersSnapshot.documents) {
             val folder = Folder.fromMap(folderDoc.data ?: emptyMap())
-            db.getFolderDao().insertFolder(folder)
+
+            val folderToInsert = folder.copy(userId = userId)
+
+            db.getFolderDao().insertFolder(folderToInsert)
 
             val notesSnapshot = firestore.collection("users").document(userId)
                 .collection("folders").document(folder.id.toString())
@@ -125,7 +136,9 @@ class NoteRepository(private val db: NoteDatabase) {
 
             for (noteDoc in notesSnapshot.documents) {
                 val note = Note.fromMap(noteDoc.data ?: emptyMap())
-                db.getNoteDao().insertNote(note)
+
+                val noteToInsert = note.copy(userId = userId)
+                db.getNoteDao().insertNote(noteToInsert)
             }
         }
     }

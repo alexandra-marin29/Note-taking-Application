@@ -10,6 +10,8 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.noteapp.R
 import com.example.noteapp.database.NoteDatabase
+import com.example.noteapp.model.Note
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -21,7 +23,6 @@ class ReminderReceiver : BroadcastReceiver() {
             val noteId = intent.getIntExtra("noteId", -1)
             val noteTitle = intent.getStringExtra("noteTitle")
             val noteDesc = intent.getStringExtra("noteDesc")
-
             if (noteId == -1 || noteTitle.isNullOrEmpty()) return
 
             if (ActivityCompat.checkSelfPermission(
@@ -32,22 +33,32 @@ class ReminderReceiver : BroadcastReceiver() {
                 return
             }
 
-            val notification = NotificationCompat.Builder(context, "noteReminderChannel")
-                .setSmallIcon(R.drawable.baseline_notification_important_24)
-                .setContentTitle(noteTitle)
-                .setContentText(null)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .build()
-
-            val notificationManager = NotificationManagerCompat.from(context)
-            notificationManager.notify(noteId, notification)
-
             val db = NoteDatabase.invoke(context)
+            val noteDao = db.getNoteDao()
+
             CoroutineScope(Dispatchers.IO).launch {
-                val noteDao = db.getNoteDao()
-                val note = noteDao.getNoteById(noteId)
-                if (note != null && note.reminderTime != null) {
+                val note: Note? = noteDao.getNoteById(noteId)
+                if (note == null) return@launch
+
+                val currentUser = FirebaseAuth.getInstance().currentUser
+                val currentUserId = currentUser?.uid
+
+                if (note.userId != currentUserId) {
+                    return@launch
+                }
+
+                val notification = NotificationCompat.Builder(context, "noteReminderChannel")
+                    .setSmallIcon(R.drawable.baseline_notification_important_24)
+                    .setContentTitle(noteTitle)
+                    .setContentText(noteDesc ?: "")
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setAutoCancel(true)
+                    .build()
+
+                val notificationManager = NotificationManagerCompat.from(context)
+                notificationManager.notify(noteId, notification)
+
+                if (note.reminderTime != null) {
                     val updatedNote = note.copy(reminderTime = null)
                     noteDao.updateNote(updatedNote)
                 }

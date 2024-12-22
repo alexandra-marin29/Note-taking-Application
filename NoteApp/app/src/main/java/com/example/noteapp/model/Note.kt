@@ -24,6 +24,7 @@ import com.google.firebase.firestore.Exclude
 data class Note(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+
     val noteTitle: String,
     val noteDesc: String,
     val noteColor: String = "#FFFFFFFF",
@@ -32,7 +33,8 @@ data class Note(
     val isPinned: Boolean = false,
     val reminderTime: Long? = null,
     val imageUris: String = "[]",
-    val urls: String = "[]"
+    val urls: String = "[]",
+    val userId: String
 ) : Parcelable {
     @Exclude
     fun toMap(): Map<String, Any?> {
@@ -46,7 +48,8 @@ data class Note(
             "isPinned" to isPinned,
             "reminderTime" to reminderTime,
             "imageUris" to imageUris,
-            "urls" to urls
+            "urls" to urls,
+            "userId" to userId
         )
     }
 
@@ -62,7 +65,8 @@ data class Note(
                 isPinned = map["isPinned"] as Boolean? ?: false,
                 reminderTime = map["reminderTime"] as Long?,
                 imageUris = map["imageUris"] as String? ?: "[]",
-                urls = map["urls"] as String? ?: "[]"
+                urls = map["urls"] as String? ?: "[]",
+                userId = map["userId"] as String? ?: ""
             )
         }
     }

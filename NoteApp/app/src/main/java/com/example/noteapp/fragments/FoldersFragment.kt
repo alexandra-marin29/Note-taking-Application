@@ -39,13 +39,14 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
     private lateinit var auth: FirebaseAuth
 
     private var hasQuoteBeenFetched = false
-
     private var currentQuote: String? = null
+
+    private lateinit var userId: String
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentFoldersBinding.inflate(inflater, container, false)
 
         savedInstanceState?.let { bundle ->
@@ -58,8 +59,11 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         notesViewModel = (activity as MainActivity).noteViewModel
         auth = FirebaseAuth.getInstance()
+
+        userId = auth.currentUser?.uid ?: ""
 
         requireActivity().title = "NoteApp"
 
@@ -68,7 +72,7 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
 
         setupRecyclerView()
 
-        notesViewModel.getAllFolders().observe(viewLifecycleOwner) { folders ->
+        notesViewModel.getAllFoldersByUserId(userId).observe(viewLifecycleOwner) { folders ->
             foldersAdapter.differ.submitList(folders)
             if (folders.isEmpty()) {
                 binding.emptyFoldersImage.visibility = View.VISIBLE
@@ -79,14 +83,15 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
             }
         }
 
-        binding.addFolderFab.setOnClickListener { showNewFolderDialog() }
+        binding.addFolderFab.setOnClickListener {
+            showNewFolderDialog()
+        }
 
         if (currentQuote.isNullOrBlank()) {
-            binding.quoteTextView.text = "Loading motivational quote..."
+            binding.quoteTextView.text = "Loading quote..."
         } else {
             binding.quoteTextView.text = currentQuote
         }
-
 
         if (!hasQuoteBeenFetched) {
             fetchAndDisplayQuote()
@@ -95,7 +100,6 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
 
         startPeriodicQuoteRefresh()
     }
-
 
     private fun setupRecyclerView() {
         foldersAdapter = FoldersAdapter { folder ->
@@ -120,7 +124,7 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
             .setPositiveButton("OK") { dialog, _ ->
                 val folderName = editText.text.toString().trim()
                 if (folderName.isNotEmpty()) {
-                    notesViewModel.addFolder(folderName)
+                    notesViewModel.addFolder(folderName, userId)
                     Toast.makeText(requireContext(), "Folder created", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(requireContext(), "Folder name cannot be empty", Toast.LENGTH_SHORT).show()
@@ -132,10 +136,19 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
             .show()
     }
 
-
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menu.clear()
         menuInflater.inflate(R.menu.folder_menu, menu)
+
+        val email = FirebaseAuth.getInstance().currentUser?.email ?: "No user"
+
+        val userIconItem = menu.findItem(R.id.userIconMenu)
+        val subMenu = userIconItem.subMenu
+
+        val emailItem = subMenu?.findItem(R.id.currentUserEmail)
+        if (emailItem != null) {
+            emailItem.title = "Email: $email"
+        }
     }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
@@ -144,12 +157,19 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
                 logout()
                 true
             }
+            R.id.userIconMenu -> {
+                true
+            }
+            R.id.currentUserEmail -> {
+                activity?.invalidateOptionsMenu()
+                true
+            }
             else -> false
         }
     }
 
     private fun logout() {
-        FirebaseAuth.getInstance().signOut()
+        auth.signOut()
         val googleSignInClient = GoogleSignIn.getClient(requireContext(), GoogleSignInOptions.DEFAULT_SIGN_IN)
         googleSignInClient.signOut().addOnCompleteListener { task ->
             if (task.isSuccessful) {
@@ -161,7 +181,6 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
         }
     }
 
-
     private fun fetchAndDisplayQuote() {
         if (!isNetworkAvailable(requireContext())) {
             currentQuote = "No internet connection."
@@ -169,7 +188,7 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
             return
         }
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = withContext(Dispatchers.IO) {
                     RetrofitInstance.api.getRandomQuote()
@@ -215,7 +234,7 @@ class FoldersFragment : Fragment(R.layout.fragment_folders), MenuProvider {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 while (true) {
-                    delay(30000) 
+                    delay(30000)
                     fetchAndDisplayQuote()
                 }
             }

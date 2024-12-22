@@ -6,6 +6,7 @@ import com.example.noteapp.model.Note
 
 @Dao
 interface NoteDao {
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNote(note: Note): Long
 
@@ -15,23 +16,23 @@ interface NoteDao {
     @Delete
     suspend fun deleteNote(note: Note)
 
-    @Query("SELECT * FROM notes WHERE folderId = :folderId ORDER BY isPinned DESC, id DESC")
-    fun getAllNotesByFolder(folderId: Int): LiveData<List<Note>>
+    @Query("SELECT * FROM notes WHERE folderId = :folderId AND userId = :userId ORDER BY isPinned DESC, id DESC")
+    fun getAllNotesByFolder(folderId: Int, userId: String): LiveData<List<Note>>
 
-    @Query("SELECT * FROM NOTES WHERE (noteTitle LIKE :query OR noteDesc LIKE :query) AND folderId = :folderId ORDER BY isPinned DESC, id DESC")
-    fun searchNoteInFolder(query: String?, folderId: Int): LiveData<List<Note>>
+    @Query("SELECT * FROM notes WHERE (noteTitle LIKE :query OR noteDesc LIKE :query) AND folderId = :folderId AND userId = :userId ORDER BY isPinned DESC, id DESC")
+    fun searchNoteInFolder(query: String?, folderId: Int, userId: String): LiveData<List<Note>>
 
-    @Query("SELECT * FROM notes WHERE folderId = :folderId ORDER BY isPinned DESC, noteTitle ASC")
-    fun getNotesSortedByTitle(folderId: Int): LiveData<List<Note>>
+    @Query("SELECT * FROM notes WHERE folderId = :folderId AND userId = :userId ORDER BY isPinned DESC, noteTitle ASC")
+    fun getNotesSortedByTitle(folderId: Int, userId: String): LiveData<List<Note>>
 
-    @Query("SELECT * FROM notes WHERE folderId = :folderId ORDER BY isPinned DESC, dateCreated DESC")
-    fun getNotesSortedByDateDesc(folderId: Int): LiveData<List<Note>>
+    @Query("SELECT * FROM notes WHERE folderId = :folderId AND userId = :userId ORDER BY isPinned DESC, dateCreated DESC")
+    fun getNotesSortedByDateDesc(folderId: Int, userId: String): LiveData<List<Note>>
 
-    @Query("SELECT * FROM notes WHERE folderId = :folderId ORDER BY isPinned DESC, dateCreated ASC")
-    fun getNotesSortedByDateAsc(folderId: Int): LiveData<List<Note>>
+    @Query("SELECT * FROM notes WHERE folderId = :folderId AND userId = :userId ORDER BY isPinned DESC, dateCreated ASC")
+    fun getNotesSortedByDateAsc(folderId: Int, userId: String): LiveData<List<Note>>
 
-    @Query("SELECT * FROM notes WHERE folderId = :folderId")
-    suspend fun getNotesListByFolderId(folderId: Int): List<Note>
+    @Query("SELECT * FROM notes WHERE folderId = :folderId AND userId = :userId")
+    suspend fun getNotesListByFolderId(folderId: Int, userId: String): List<Note>
 
     @Query("SELECT * FROM notes WHERE id = :noteId LIMIT 1")
     suspend fun getNoteById(noteId: Int): Note?
@@ -39,8 +40,6 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE id = :noteId LIMIT 1")
     fun getNoteByIdLiveData(noteId: Int): LiveData<Note?>
 
-    @Query("DELETE FROM notes WHERE folderId = :folderId")
-    suspend fun deleteNotesByFolder(folderId: Int)
-
-
+    @Query("DELETE FROM notes WHERE folderId = :folderId AND userId = :userId")
+    suspend fun deleteNotesByFolder(folderId: Int, userId: String)
 }

@@ -19,6 +19,7 @@ import com.example.noteapp.model.Note
 import com.example.noteapp.viewmodel.NoteViewModel
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.appcompat.app.AlertDialog
+import com.google.firebase.auth.FirebaseAuth
 
 private const val PREFS_NAME = "note_prefs"
 private const val KEY_SORT_INDEX = "sort_index"
@@ -34,7 +35,8 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
 
     private var folderId: Int = -1
     private var folderName: String = ""
-
+    private lateinit var auth: FirebaseAuth
+    private lateinit var userId: String
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -45,7 +47,8 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        auth = FirebaseAuth.getInstance()
+        userId = auth.currentUser?.uid ?: ""
         arguments?.let {
             folderId = it.getInt("folderId", -1)
         }
@@ -93,25 +96,33 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
     private fun applySorting(index: Int) {
         when (index) {
             0 -> {
-                notesViewModel.getNotesSortedByTitle(folderId).observe(viewLifecycleOwner) { notes ->
+                notesViewModel.getNotesSortedByTitle(folderId, userId).observe(viewLifecycleOwner) { notes ->
                     noteAdapter.differ.submitList(notes)
                     updateUI(notes)
                 }
             }
             1 -> {
-                notesViewModel.getNotesSortedByDateDesc(folderId).observe(viewLifecycleOwner) { notes ->
+                notesViewModel.getNotesSortedByDateDesc(folderId, userId).observe(viewLifecycleOwner) { notes ->
                     noteAdapter.differ.submitList(notes)
                     updateUI(notes)
                 }
             }
             2 -> {
-                notesViewModel.getNotesSortedByDateAsc(folderId).observe(viewLifecycleOwner) { notes ->
+                notesViewModel.getNotesSortedByDateAsc(folderId, userId).observe(viewLifecycleOwner) { notes ->
                     noteAdapter.differ.submitList(notes)
                     updateUI(notes)
                 }
             }
         }
     }
+
+    private fun searchNote(query: String?) {
+        val searchQuery = "%${query}%"
+        notesViewModel.searchNoteInFolder(searchQuery, folderId, userId).observe(viewLifecycleOwner) { list ->
+            noteAdapter.differ.submitList(list)
+        }
+    }
+
 
     private fun updateUI(notes: List<Note>?) {
         if (notes != null) {
@@ -140,12 +151,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
         }
     }
 
-    private fun searchNote(query: String?) {
-        val searchQuery = "%${query}%"
-        notesViewModel.searchNoteInFolder(searchQuery, folderId).observe(viewLifecycleOwner) { list ->
-            noteAdapter.differ.submitList(list)
-        }
-    }
+
 
     override fun onQueryTextSubmit(query: String?): Boolean {
         return false

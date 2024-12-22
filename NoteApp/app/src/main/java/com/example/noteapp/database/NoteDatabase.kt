@@ -9,7 +9,7 @@ import com.example.noteapp.model.Folder
 import com.example.noteapp.model.Note
 import androidx.room.migration.Migration
 
-@Database(entities = [Note::class, Folder::class], version = 8)
+@Database(entities = [Note::class, Folder::class], version = 9)
 abstract class NoteDatabase : RoomDatabase() {
 
     abstract fun getNoteDao(): NoteDao
@@ -38,6 +38,12 @@ abstract class NoteDatabase : RoomDatabase() {
                 database.execSQL("ALTER TABLE notes ADD COLUMN urls TEXT NOT NULL DEFAULT '[]'")
             }
         }
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE folders ADD COLUMN userId TEXT NOT NULL DEFAULT ''")
+                database.execSQL("ALTER TABLE notes ADD COLUMN userId TEXT NOT NULL DEFAULT ''")
+            }
+        }
 
         operator fun invoke(context: Context) = instance ?: synchronized(LOCK) {
             instance ?: createDatabase(context).also { instance = it }
@@ -49,7 +55,7 @@ abstract class NoteDatabase : RoomDatabase() {
                 NoteDatabase::class.java,
                 "note_db"
             )
-                .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                 .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
