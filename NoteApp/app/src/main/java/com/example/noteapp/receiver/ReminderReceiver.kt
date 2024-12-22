@@ -1,6 +1,5 @@
 package com.example.noteapp.receiver
 
-import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -22,12 +21,11 @@ class ReminderReceiver : BroadcastReceiver() {
         try {
             val noteId = intent.getIntExtra("noteId", -1)
             val noteTitle = intent.getStringExtra("noteTitle")
-            val noteDesc = intent.getStringExtra("noteDesc")
             if (noteId == -1 || noteTitle.isNullOrEmpty()) return
 
             if (ActivityCompat.checkSelfPermission(
                     context,
-                    Manifest.permission.POST_NOTIFICATIONS
+                    android.Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 return
@@ -50,7 +48,6 @@ class ReminderReceiver : BroadcastReceiver() {
                 val notification = NotificationCompat.Builder(context, "noteReminderChannel")
                     .setSmallIcon(R.drawable.baseline_notification_important_24)
                     .setContentTitle(noteTitle)
-                    .setContentText(noteDesc ?: "")
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setAutoCancel(true)
                     .build()

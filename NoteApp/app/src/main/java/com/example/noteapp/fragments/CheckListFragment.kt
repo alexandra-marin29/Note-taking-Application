@@ -409,7 +409,6 @@ class CheckListFragment : Fragment(R.layout.fragment_check_list), MenuProvider {
             val intent = Intent(requireContext(), ReminderReceiver::class.java).apply {
                 putExtra("noteId", note.id)
                 putExtra("noteTitle", note.noteTitle)
-                putExtra("noteDesc", note.noteDesc)
             }
             val pendingIntent = PendingIntent.getBroadcast(
                 requireContext(),
