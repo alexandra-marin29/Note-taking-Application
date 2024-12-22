@@ -42,4 +42,8 @@ interface NoteDao {
 
     @Query("DELETE FROM notes WHERE folderId = :folderId AND userId = :userId")
     suspend fun deleteNotesByFolder(folderId: Int, userId: String)
+
+    @Query("SELECT * FROM notes WHERE reminderTime IS NOT NULL AND reminderTime > :currentTime AND userId = :userId")
+    suspend fun getActiveReminders(currentTime: Long, userId: String): List<Note>
+
 }

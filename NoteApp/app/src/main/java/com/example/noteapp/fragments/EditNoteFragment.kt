@@ -496,13 +496,14 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             pinMenuItem.setIcon(R.drawable.baseline_push_pin_outline_24)
         }
 
-        val reminderMenuItem = menu.findItem(R.id.reminderMenu)
+        reminderMenuItem = menu.findItem(R.id.reminderMenu)
         if (reminderTime != null) {
-            reminderMenuItem.setIcon(R.drawable.baseline_time_filled_24)
+            reminderMenuItem?.setIcon(R.drawable.baseline_time_filled_24)
         } else {
-            reminderMenuItem.setIcon(R.drawable.baseline_time_outline_24)
+            reminderMenuItem?.setIcon(R.drawable.baseline_time_outline_24)
         }
     }
+
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
         return when (menuItem.itemId) {

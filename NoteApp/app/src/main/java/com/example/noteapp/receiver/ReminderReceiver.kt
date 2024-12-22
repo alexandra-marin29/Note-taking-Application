@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -11,6 +12,7 @@ import com.example.noteapp.R
 import com.example.noteapp.database.NoteDatabase
 import com.example.noteapp.model.Note
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,6 +20,8 @@ import kotlinx.coroutines.launch
 class ReminderReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        Log.d("ReminderReceiver", "ReminderReceiver onReceive triggered!")
+
         try {
             val noteId = intent.getIntExtra("noteId", -1)
             val noteTitle = intent.getStringExtra("noteTitle")
@@ -58,7 +62,17 @@ class ReminderReceiver : BroadcastReceiver() {
                 if (note.reminderTime != null) {
                     val updatedNote = note.copy(reminderTime = null)
                     noteDao.updateNote(updatedNote)
+                    val userId = FirebaseAuth.getInstance().currentUser?.uid
+                    if (userId != null) {
+                        val firestore = FirebaseFirestore.getInstance()
+                        firestore.collection("users").document(userId)
+                            .collection("folders").document(note.folderId.toString())
+                            .collection("notes").document(note.id.toString())
+                            .update("reminderTime", null)
+
+                    }
                 }
+
             }
 
         } catch (e: SecurityException) {
@@ -68,3 +82,4 @@ class ReminderReceiver : BroadcastReceiver() {
         }
     }
 }
+

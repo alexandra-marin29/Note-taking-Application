@@ -74,6 +74,12 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
     fun getFolderByIdLiveData(id: Int) = noteRepository.getFolderByIdLiveData(id)
     fun getNoteByIdLiveData(id: Int) = noteRepository.getNoteByIdLiveData(id)
 
+    fun getActiveReminders(currentTime: Long, userId: String, callback: (List<Note>) -> Unit) = viewModelScope.launch {
+        val reminders = noteRepository.getActiveReminders(currentTime, userId)
+        callback(reminders)
+    }
+
+
     private fun cancelReminder(note: Note) {
         val context = getApplication<Application>().applicationContext
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager

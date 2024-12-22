@@ -13,10 +13,12 @@ class NoteRepository(private val db: NoteDatabase) {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
+    private val noteDao = db.getNoteDao()
+
     suspend fun insertNote(note: Note): Long {
         val localId = db.getNoteDao().insertNote(note)
 
-        val userId = auth.currentUser?.uid ?: return localId // e bine să ai check
+        val userId = auth.currentUser?.uid ?: return localId
         val noteWithId = note.copy(id = localId.toInt())
         val noteMap = noteWithId.toMap()
 
@@ -64,6 +66,10 @@ class NoteRepository(private val db: NoteDatabase) {
             .collection("folders").document(localId.toString())
             .set(folderMap)
             .await()
+    }
+
+    suspend fun getActiveReminders(currentTime: Long, userId: String): List<Note> {
+        return noteDao.getActiveReminders(currentTime, userId)
     }
 
     suspend fun deleteFolder(folder: Folder) {
