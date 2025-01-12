@@ -40,8 +40,6 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
     }
 
 
-
-    // FOLDERS
     fun addFolder(folderName: String, userId: String) = viewModelScope.launch {
         val folder = Folder(folderName = folderName, userId = userId)
         noteRepository.insertFolder(folder)
@@ -57,7 +55,6 @@ class NoteViewModel(app: Application, private val noteRepository: NoteRepository
         noteRepository.deleteFolder(folder)
     }
 
-    // NOTES - queries
     fun getAllNotesByFolder(folderId: Int, userId: String) = noteRepository.getAllNotesByFolder(folderId, userId)
 
     fun searchNoteInFolder(query: String?, folderId: Int, userId: String) = noteRepository.searchNoteInFolder(query, folderId, userId)

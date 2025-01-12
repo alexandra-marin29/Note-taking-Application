@@ -169,6 +169,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
         menuInflater.inflate(R.menu.home_menu, menu)
 
         val menuSearch = menu.findItem(R.id.searchMenu).actionView as SearchView
+        menuSearch.maxWidth = 700
         menuSearch.isSubmitButtonEnabled = false
         menuSearch.setOnQueryTextListener(this)
 
